@@ -14,7 +14,7 @@
     },
     "soldadoras_inverter": {
       "nombre": "Soldadoras Inverter",
-      "productos": ["NESAF0905","NESAG1215","NESCP0910","NESE601320","NESE601325","NESE601332","NESI06130","NESI08170","NESI08200","NESI08250","NESM06150","NESM06160","NESM08200","NESM08230","NESM09240","NEST11250"]
+      "productos": ["NESAF0905","NESAG1215","NESCP0910","NESE601332","NESI06130","NESI08170","NESI08200","NESI08250","NESM06150","NESM06160","NESM08200","NESM08230","NESM09240","NEST11250"]
     },
     "equipos_elevacion": {
       "nombre": "Equipos de Elevación",
