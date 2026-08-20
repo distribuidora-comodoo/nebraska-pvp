@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Categoría — Nebraska</title>
+<style>
+  :root{ --naranja:#F5891C; --negro:#1A1A1A; }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:#eee;
+    font-family: Arial, Helvetica, sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:24px 12px;
+  }
+  .wrap{ width:100%; max-width:420px; }
+  .volver{
+    display:inline-block;
+    margin-bottom:14px;
+    color:var(--negro);
+    text-decoration:none;
+    font-size:14px;
+  }
+  h1{ font-size:20px; color:var(--negro); margin-bottom:16px; }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .prod{
+    background:#fff;
+    border-radius:10px;
+    overflow:hidden;
+    text-decoration:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.12);
+  }
+  .prod img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; background:#f2f2f2; }
+  .prod .cod{
+    display:block;
+    text-align:center;
+    padding:8px 4px;
+    font-size:12px;
+    font-weight:bold;
+    color:var(--negro);
+  }
+  .estado{ text-align:center; font-size:13px; color:#a00; padding:40px 16px; grid-column:1/-1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="volver" href="menu.html">← Volver al catálogo</a>
+  <h1 id="titulo">Cargando…</h1>
+  <div class="grid" id="grid">
+    <div class="estado">Cargando productos…</div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const cat = params.get("cat");
+
+fetch(`fichas/manifest.json?t=${Date.now()}`)
+  .then(r => r.json())
+  .then(data => {
+    const info = data.categorias[cat];
+    const grid = document.getElementById("grid");
+    if (!info) {
+      document.getElementById("titulo").textContent = "Categoría no encontrada";
+      grid.innerHTML = "";
+      return;
+    }
+    document.getElementById("titulo").textContent = info.nombre;
+    grid.innerHTML = "";
+    info.productos.forEach(codigo => {
+      const a = document.createElement("a");
+      a.className = "prod";
+      a.href = `ficha-producto.html?id=${codigo}&cat=${cat}`;
+      a.innerHTML = `
+        <img src="fichas/${cat}/${codigo}.png" loading="lazy" alt="${codigo}">
+        <span class="cod">${codigo}</span>
+      `;
+      grid.appendChild(a);
+    });
+  })
+  .catch(() => {
+    document.getElementById("grid").innerHTML =
+      '<div class="estado">No se pudo cargar la categoría</div>';
+  });
+</script>
+</body>
+</html>

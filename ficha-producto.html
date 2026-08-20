@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de producto — Nebraska</title>
+<style>
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:#ccc;
+    display:flex;
+    justify-content:center;
+    padding:24px 12px;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .card{
+    width:100%;
+    max-width:420px;
+    background:#fff;
+    box-shadow:0 4px 20px rgba(0,0,0,.2);
+  }
+  .ficha-img{ width:100%; display:block; }
+  .estado{ text-align:center; font-size:13px; color:#a00; padding:60px 16px; }
+  .volver{
+    display:block;
+    text-align:center;
+    padding:12px;
+    font-size:14px;
+    color:#1A1A1A;
+    text-decoration:none;
+    border-top:1px solid #eee;
+  }
+  .video-wrap{ padding:14px 16px 0; }
+  .video-wrap iframe{
+    width:100%;
+    aspect-ratio:16/9;
+    border:0;
+    border-radius:8px;
+    display:block;
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="estado">Cargando…</div>
+</div>
+
+<script>
+/* =====================================================================
+   Carpeta base donde están las imágenes de las fichas en el repositorio.
+   Si además organizás por categoría (fichas/jardin/, fichas/electricas/,
+   fichas/inalambricas/), el link del QR lleva un parámetro "cat" y la
+   página busca ahí adentro. Si un producto no tiene categoría, busca
+   directo en la carpeta base (fichas/CODIGO.png) — así los QR viejos
+   siguen funcionando sin tocarlos.
+
+   Ejemplos de link para el QR:
+   ficha-producto.html?id=NOPMH20&cat=inalambricas
+   ficha-producto.html?id=NEBS0370&cat=electricas
+   ficha-producto.html?id=NECB02                      (sin categoría)
+   ===================================================================== */
+const CARPETA_BASE = "fichas";
+
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+const categoria = params.get("cat");
+
+const card = document.getElementById("card");
+
+if (!id) {
+  card.innerHTML = '<div class="estado">Falta el código de producto en el link</div>';
+} else {
+  const carpeta = categoria ? `${CARPETA_BASE}/${categoria}` : CARPETA_BASE;
+
+  // El "?t=" con la hora actual evita que el navegador (o GitHub) te
+  // muestre una versión vieja en caché de la imagen después de
+  // reemplazarla. Así siempre se pide la última.
+  const url = `${carpeta}/${id}.png?t=${Date.now()}`;
+
+  const img = new Image();
+  img.className = "ficha-img";
+  img.alt = `Ficha de ${id}`;
+  img.onload = () => {
+    card.innerHTML = "";
+    card.appendChild(img);
+
+    // Si el producto tiene video cargado en el manifest, se agrega debajo.
+    fetch(`${CARPETA_BASE}/manifest.json?t=${Date.now()}`)
+      .then(r => r.json())
+      .then(data => {
+        const videoUrl = data.videos && data.videos[id];
+        if (videoUrl) {
+          const wrap = document.createElement("div");
+          wrap.className = "video-wrap";
+          wrap.innerHTML = `<iframe src="${videoUrl}" allow="autoplay" allowfullscreen></iframe>`;
+          card.appendChild(wrap);
+        }
+      })
+      .catch(() => {}); // si no hay manifest o falla, la ficha se ve igual sin video
+
+    const volver = document.createElement("a");
+    volver.className = "volver";
+    volver.href = categoria ? `categoria.html?cat=${categoria}` : "menu.html";
+    volver.textContent = "← Ver catálogo";
+    card.appendChild(volver);
+  };
+  img.onerror = () => {
+    card.innerHTML = '<div class="estado">No se encontró la ficha de "' + id + '"</div>';
+  };
+  img.src = url;
+}
+</script>
+
+</body>
+</html>
