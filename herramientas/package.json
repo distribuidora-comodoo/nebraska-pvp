@@ -1,0 +1,9 @@
+{
+  "name": "nebraska-herramientas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generador masivo de QR para el catalogo Nebraska",
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}
