@@ -3,68 +3,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1d1d1d">
 <title>Catálogo Nebraska</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap">
+<link rel="stylesheet" href="assets/nebraska.css">
 <style>
-  :root{ --naranja:#F5891C; --negro:#1A1A1A; }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{
-    background:#eee;
-    font-family: Arial, Helvetica, sans-serif;
+  .nb-banner-pdf{
     display:flex;
-    justify-content:center;
-    padding:24px 12px;
-  }
-  .wrap{ width:100%; max-width:420px; }
-  h1{
-    font-size:22px;
-    color:var(--negro);
-    text-align:center;
-    margin-bottom:18px;
-  }
-  .cat-btn{
-    display:block;
-    width:100%;
-    background:#fff;
-    border:2px solid var(--naranja);
-    border-radius:10px;
-    padding:16px;
-    margin-bottom:12px;
-    font-size:17px;
-    font-weight:bold;
-    color:var(--negro);
+    align-items:center;
+    gap:12px;
+    margin:14px 0 22px;
+    padding:12px 16px;
+    background:#212121;
+    border:1px solid #2c2c2c;
+    border-left:3px solid #fc771d;
+    border-radius:8px;
     text-decoration:none;
-    text-align:center;
+    color:#e8e8e8;
+    transition:background .15s ease, border-color .15s ease;
   }
-  .estado{ text-align:center; font-size:13px; color:#a00; padding:40px 16px; }
+  .nb-banner-pdf:hover{
+    background:#262626;
+    border-left-color:#ff8b3d;
+  }
+  .nb-banner-pdf .ic{
+    flex:0 0 auto;
+    width:20px;
+    height:20px;
+    color:#fc771d;
+  }
+  .nb-banner-pdf .txt{
+    flex:1 1 auto;
+    font-family:'Montserrat', sans-serif;
+    font-size:.92rem;
+    font-weight:600;
+    line-height:1.25;
+  }
+  .nb-banner-pdf .txt small{
+    display:block;
+    font-weight:400;
+    font-size:.78rem;
+    color:#a7a7a7;
+    margin-top:2px;
+  }
+  .nb-banner-pdf .flecha{
+    flex:0 0 auto;
+    width:16px;
+    height:16px;
+    color:#8a8a8a;
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Catálogo Nebraska</h1>
-  <div id="categorias">
-    <div class="estado">Cargando categorías…</div>
-  </div><a class="cat-btn" href="https://drive.google.com/file/d/1a0Gi2UGH8Bv5koPII8cMGI0ezpHFYTLi/view?usp=drive_link" target="_blank" style="background:#1A1A1A; color:#fff; border-color:#1A1A1A;">📄 Ver catálogo completo (PDF)</a>
-</div>
 
+<header class="nb-header">
+  <div class="nb-bar">
+    <a class="nb-logo" href="menu.html"><i></i><span>NEBRASKA</span></a>
+    <span class="nb-spacer"></span>
+  </div>
+  <div class="nb-search">
+    <div class="nb-field">
+      <svg class="lupa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="nb-q" type="search" autocomplete="off" autocapitalize="characters" spellcheck="false"
+             placeholder="Buscar por código (ej: NECO02024K)" aria-label="Buscar producto por código">
+      <button class="nb-limpiar" type="button" aria-label="Borrar búsqueda">&times;</button>
+    </div>
+    <div class="nb-res" id="nb-res"></div>
+  </div>
+</header>
+
+<main class="nb-wrap">
+  <h1 class="nb-titulo">Catálogo Nebraska</h1>
+  <p class="nb-sub" id="subtitulo">Elegí una categoría o buscá el producto por su código.</p>
+
+  <a class="nb-banner-pdf" href="https://drive.google.com/file/d/1a0Gi2UGH8Bv5koPII8cMGI0ezpHFYTLi/view" target="_blank" rel="noopener">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span class="txt">Ver catálogo completo (PDF)<small>Todos los productos y precios en un solo documento</small></span>
+    <span class="flecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></span>
+  </a>
+
+  <section class="nb-sec nb-sec--primera" id="vistos" hidden>
+    <div class="nb-sec-head">
+      <h2>Vistos recientemente</h2>
+    </div>
+    <div class="nb-carrusel" id="vistos-lista"></div>
+  </section>
+
+  <div class="nb-cats" id="categorias">
+    <div class="nb-cat"><div class="txt"><div class="nb-skel" style="height:16px;width:60%;border-radius:6px"></div></div></div>
+    <div class="nb-cat"><div class="txt"><div class="nb-skel" style="height:16px;width:45%;border-radius:6px"></div></div></div>
+    <div class="nb-cat"><div class="txt"><div class="nb-skel" style="height:16px;width:70%;border-radius:6px"></div></div></div>
+  </div>
+
+  <p class="nb-pie">NEBRASKA · Precios sugeridos de venta</p>
+</main>
+
+<script src="assets/nebraska.js"></script>
 <script>
-fetch(`fichas/manifest.json?t=${Date.now()}`)
-  .then(r => r.json())
-  .then(data => {
-    const cont = document.getElementById("categorias");
-    cont.innerHTML = "";
-    Object.keys(data.categorias).forEach(key => {
-      const cat = data.categorias[key];
-      const a = document.createElement("a");
-      a.className = "cat-btn";
-      a.href = `categoria.html?cat=${key}`;
-      a.textContent = cat.nombre;
-      cont.appendChild(a);
-    });
-  })
-  .catch(() => {
-    document.getElementById("categorias").innerHTML =
-      '<div class="estado">No se pudo cargar el catálogo</div>';
+var FLECHA = '<span class="flecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>';
+
+/* Últimos productos que se abrieron en este celular. */
+(function () {
+  var vistos = NB.recientes();
+  if (!vistos.length) return;
+  var lista = document.getElementById("vistos-lista");
+  vistos.forEach(function (p) { lista.appendChild(NB.tarjeta(p.codigo, p.cat)); });
+  document.getElementById("vistos").hidden = false;
+})();
+
+NB.manifest().then(function (data) {
+  var cont = document.getElementById("categorias");
+  cont.innerHTML = "";
+
+  /* Las más visitadas primero (ver nota en nebraska.js). */
+  var orden = NB.categoriasOrdenadas(data);
+  var ordenado = NB.hayVisitas();
+  if (ordenado) {
+    document.getElementById("subtitulo").textContent =
+      "Ordenadas por las categorías que más consultás.";
+  }
+
+  orden.forEach(function (key, i) {
+    var cat = data.categorias[key];
+    var cant = (cat.productos || []).length;
+    var a = document.createElement("a");
+    a.className = "nb-cat";
+    a.href = "categoria.html?cat=" + encodeURIComponent(key);
+    a.innerHTML =
+      '<div class="txt"><div class="nom">' + NB.escapar(cat.nombre) +
+      (ordenado && i === 0 ? '<span class="nb-tag">Más vista</span>' : "") + "</div>" +
+      '<div class="cant">' + cant + (cant === 1 ? " producto" : " productos") + "</div></div>" + FLECHA;
+    cont.appendChild(a);
   });
+}).catch(function () {
+  document.getElementById("categorias").innerHTML =
+    '<div class="nb-estado"><strong>No se pudo cargar el catálogo</strong>Revisá tu conexión e intentá de nuevo.' +
+    '<br><a class="nb-btn" href="menu.html">Reintentar</a></div>';
+});
 </script>
 </body>
 </html>

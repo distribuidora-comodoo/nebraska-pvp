@@ -3,130 +3,200 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1d1d1d">
 <title>Ficha de producto — Nebraska</title>
-<style>
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{
-    background:#ccc;
-    display:flex;
-    justify-content:center;
-    padding:24px 12px;
-    font-family: Arial, Helvetica, sans-serif;
-  }
-  .card{
-    width:100%;
-    max-width:420px;
-    background:#fff;
-    box-shadow:0 4px 20px rgba(0,0,0,.2);
-  }
-  .ficha-img{ width:100%; display:block; }
-  .estado{ text-align:center; font-size:13px; color:#a00; padding:60px 16px; }
-  .volver-wrap{ padding:14px 16px 4px; }
-  .volver{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    width:100%;
-    padding:12px 16px;
-    background:#FC771D;
-    color:#F4F4F4;
-    font-size:14px;
-    font-weight:bold;
-    text-decoration:none;
-    border-radius:14px;
-    transition:background .15s ease, transform .1s ease;
-  }
-  .volver:hover{ background:#e0691a; }
-  .volver:active{ transform:scale(0.98); }
-  .volver svg{ width:16px; height:16px; flex-shrink:0; }
-  .video-wrap{ padding:14px 16px 0; }
-  .video-wrap iframe{
-    width:100%;
-    height:70vh; max-height:600px;
-    border:0;
-    border-radius:8px;
-    display:block;
-  }
-</style>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap">
+<link rel="stylesheet" href="assets/nebraska.css">
 </head>
 <body>
 
-<div class="card" id="card">
-  <div class="estado">Cargando…</div>
-</div>
+<!-- Barra fija: el botón "Ver catálogo" queda siempre arriba, junto al
+     buscador por código, para poder saltar a cualquier otro producto. -->
+<header class="nb-header">
+  <div class="nb-bar">
+    <a class="nb-logo" href="menu.html"><i></i><span>NEBRASKA</span></a>
+    <span class="nb-spacer"></span>
+    <a class="nb-btn" href="menu.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>
+      Ver catálogo
+    </a>
+  </div>
+  <div class="nb-search">
+    <div class="nb-field">
+      <svg class="lupa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="nb-q" type="search" autocomplete="off" autocapitalize="characters" spellcheck="false"
+             placeholder="Buscar otro producto por código" aria-label="Buscar producto por código">
+      <button class="nb-limpiar" type="button" aria-label="Borrar búsqueda">&times;</button>
+    </div>
+    <div class="nb-res" id="nb-res"></div>
+  </div>
+</header>
 
+<main class="nb-wrap nb-wrap--angosto">
+  <div class="nb-acciones" id="acciones"></div>
+
+  <div class="nb-card" id="card">
+    <div class="nb-skel nb-skel-ficha"></div>
+  </div>
+
+  <section class="nb-sec" id="relacionados" hidden>
+    <div class="nb-sec-head">
+      <h2 id="rel-titulo">También te puede interesar</h2>
+      <a id="rel-todos" href="menu.html">Ver todos</a>
+    </div>
+    <div class="nb-carrusel" id="rel-lista"></div>
+  </section>
+
+  <div class="nb-cierre">
+    <a class="nb-btn nb-btn--ancho" href="menu.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>
+      Ver todo el catálogo
+    </a>
+  </div>
+
+  <p class="nb-pie">NEBRASKA · Precios sugeridos de venta</p>
+</main>
+
+<script src="assets/nebraska.js"></script>
 <script>
 /* =====================================================================
-   Carpeta base donde están las imágenes de las fichas en el repositorio.
-   Si además organizás por categoría (fichas/jardin/, fichas/electricas/,
-   fichas/inalambricas/), el link del QR lleva un parámetro "cat" y la
-   página busca ahí adentro. Si un producto no tiene categoría, busca
-   directo en la carpeta base (fichas/CODIGO.png) — así los QR viejos
-   siguen funcionando sin tocarlos.
-
-   Ejemplos de link para el QR:
-   ficha-producto.html?id=NOPMH20&cat=inalambricas
-   ficha-producto.html?id=NEBS0370&cat=electricas
-   ficha-producto.html?id=NECB02                      (sin categoría)
+   Links del QR que soporta esta página:
+     ficha-producto.html?id=NECO02024K&cat=compresores
+     ficha-producto.html?id=NECO02024K            (sin categoría: la busca
+                                                   sola en el manifest)
+   Si el código no figura en el manifest, prueba igual en la carpeta base
+   fichas/CODIGO.png, así los QR viejos siguen funcionando sin tocarlos.
    ===================================================================== */
-const CARPETA_BASE = "fichas";
+var params   = new URLSearchParams(location.search);
+var id       = (params.get("id") || "").trim();
+var catParam = params.get("cat");
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-const categoria = params.get("cat");
+var card     = document.getElementById("card");
+var acciones = document.getElementById("acciones");
 
-const card = document.getElementById("card");
+var ICONO_VOLVER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+
+function botonVolver(href, texto) {
+  acciones.innerHTML =
+    '<a class="nb-btn nb-btn--claro nb-btn--flexible" href="' + href + '">' +
+    ICONO_VOLVER + NB.escapar(texto) + "</a>";
+}
+
+function error(titulo, texto) {
+  card.innerHTML =
+    '<div class="nb-estado"><strong>' + titulo + "</strong>" + texto +
+    '<br><a class="nb-btn" href="menu.html">Ver catálogo completo</a></div>';
+}
+
+botonVolver("menu.html", "Volver al catálogo");
 
 if (!id) {
-  card.innerHTML = '<div class="estado">Falta el código de producto en el link</div>';
+  error("Falta el código en el link", "Buscá el producto por su código arriba.");
 } else {
-  const carpeta = categoria ? `${CARPETA_BASE}/${categoria}` : CARPETA_BASE;
+  document.title = id + " — Nebraska";
 
-  // El "?t=" con la hora actual evita que el navegador (o GitHub) te
-  // muestre una versión vieja en caché de la imagen después de
-  // reemplazarla. Así siempre se pide la última.
-  const url = `${carpeta}/${id}.png?t=${Date.now()}`;
+  NB.manifest()
+    .then(function (data) { return data; })
+    .catch(function () { return null; })
+    .then(function (data) {
+      var catManifest = data ? NB.catDe(data, id) : null;
 
-  const img = new Image();
-  img.className = "ficha-img";
-  img.alt = `Ficha de ${id}`;
-  img.onload = () => {
-    card.innerHTML = "";
+      /* Carpetas donde puede estar la ficha, en orden de prioridad:
+         la del link, la del manifest, la carpeta base y, como última
+         red de seguridad, el resto de las categorías (así una imagen
+         guardada en otra carpeta igual se encuentra). */
+      var candidatos = [];
+      var orden = [catParam, catManifest, null].concat(data ? Object.keys(data.categorias) : []);
+      orden.forEach(function (c) {
+        if (candidatos.indexOf(c) < 0) candidatos.push(c);
+      });
 
-    const volverWrap = document.createElement("div");
-    volverWrap.className = "volver-wrap";
-    const volver = document.createElement("a");
-    volver.className = "volver";
-    volver.href = categoria ? `categoria.html?cat=${categoria}` : "menu.html";
-    volver.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
-      </svg>
-      Ver catálogo`;
-    volverWrap.appendChild(volver);
-    card.appendChild(volverWrap);
+      probar(0);
 
-    card.appendChild(img);
-
-    // Si el producto tiene video cargado en el manifest, se agrega debajo.
-    fetch(`${CARPETA_BASE}/manifest.json?t=${Date.now()}`)
-      .then(r => r.json())
-      .then(data => {
-        const videoUrl = data.videos && data.videos[id];
-        if (videoUrl) {
-          const wrap = document.createElement("div");
-          wrap.className = "video-wrap";
-          wrap.innerHTML = `<iframe src="${videoUrl}" allow="autoplay" allowfullscreen></iframe>`;
-          card.appendChild(wrap);
+      function probar(i) {
+        if (i >= candidatos.length) {
+          /* Si el código sí figura en el manifest, la ficha todavía no
+             está subida: igual lo dejamos volver a su categoría y ver el
+             resto de la familia, en vez de dejarlo en un callejón. */
+          if (catManifest && data.categorias[catManifest]) {
+            var info = data.categorias[catManifest];
+            botonVolver("categoria.html?cat=" + encodeURIComponent(catManifest), "Volver a " + info.nombre);
+            error("Estamos preparando la ficha de " + NB.escapar(id),
+                  "Mientras tanto podés ver el resto de " + NB.escapar(info.nombre) + ".");
+            relacionados(catManifest, info);
+          } else {
+            error('No encontramos el código "' + NB.escapar(id) + '"',
+                  "Verificá el código o buscalo arriba.");
+          }
+          return;
         }
-      })
-      .catch(() => {}); // si no hay manifest o falla, la ficha se ve igual sin video
-  };
-  img.onerror = () => {
-    card.innerHTML = '<div class="estado">No se encontró la ficha de "' + id + '"</div>';
-  };
-  img.src = url;
+        var cat = candidatos[i];
+        var img = new Image();
+        img.className = "nb-ficha-img";
+        img.alt = "Ficha del producto " + id;
+        /* La categoría que se muestra es la del manifest (la comercial),
+           aunque la imagen se haya encontrado en otra carpeta. */
+        img.onload = function () { mostrar(img, catManifest || catParam, data); };
+        img.onerror = function () { probar(i + 1); };
+        /* El "?t=" evita que el navegador muestre una versión vieja en
+           caché después de reemplazar la imagen en el repo. */
+        img.src = NB.imgFicha(id, cat) + "?t=" + Date.now();
+      }
+    });
+}
+
+function mostrar(img, cat, data) {
+  var info = cat && data && data.categorias ? data.categorias[cat] : null;
+
+  NB.registrarVisita(cat, id);
+
+  /* Botón de volver a la categoría, arriba de la ficha. */
+  if (info) {
+    botonVolver("categoria.html?cat=" + encodeURIComponent(cat), "Volver a " + info.nombre);
+  }
+
+  /* Encabezado de la tarjeta: código + categoría */
+  card.innerHTML = "";
+  var top = document.createElement("div");
+  top.className = "nb-card-top";
+  top.innerHTML =
+    '<span class="cod">' + NB.escapar(id) + "</span>" +
+    (info ? '<a class="nb-chip" href="categoria.html?cat=' + encodeURIComponent(cat) + '">' + NB.escapar(info.nombre) + "</a>" : "");
+  card.appendChild(top);
+  card.appendChild(img);
+
+  /* Video del producto, si está cargado en el manifest */
+  var videoUrl = data && data.videos ? data.videos[id] : null;
+  if (videoUrl) {
+    var wrap = document.createElement("div");
+    wrap.className = "nb-video";
+    wrap.innerHTML = "<h3>Video del producto</h3>" +
+      '<iframe src="' + NB.escapar(videoUrl) + '" allow="autoplay" allowfullscreen loading="lazy"></iframe>';
+    card.appendChild(wrap);
+  }
+
+  if (info) relacionados(cat, info);
+}
+
+/* Carrusel con el resto de la familia, para seguir recorriendo el catálogo. */
+function relacionados(cat, info) {
+  var todos = info.productos || [];
+  var desde = todos.indexOf(id);
+  var lista = [];
+  for (var i = 1; i < todos.length && lista.length < 12; i++) {
+    lista.push(todos[(Math.max(desde, 0) + i) % todos.length]);
+  }
+  if (!lista.length) return;
+
+  var cont = document.getElementById("rel-lista");
+  lista.forEach(function (codigo) { cont.appendChild(NB.tarjeta(codigo, cat)); });
+
+  document.getElementById("rel-titulo").textContent = "Más en " + info.nombre;
+  document.getElementById("rel-todos").href = "categoria.html?cat=" + encodeURIComponent(cat);
+  document.getElementById("relacionados").hidden = false;
 }
 </script>
 

@@ -3,90 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1d1d1d">
 <title>Categoría — Nebraska</title>
-<style>
-  :root{ --naranja:#F5891C; --negro:#1A1A1A; }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  body{
-    background:#eee;
-    font-family: Arial, Helvetica, sans-serif;
-    display:flex;
-    justify-content:center;
-    padding:24px 12px;
-  }
-  .wrap{ width:100%; max-width:420px; }
-  .volver{
-    display:inline-block;
-    margin-bottom:14px;
-    color:var(--negro);
-    text-decoration:none;
-    font-size:14px;
-  }
-  h1{ font-size:20px; color:var(--negro); margin-bottom:16px; }
-  .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
-  .prod{
-    background:#fff;
-    border-radius:10px;
-    overflow:hidden;
-    text-decoration:none;
-    box-shadow:0 2px 8px rgba(0,0,0,.12);
-  }
-  .prod img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; background:#f2f2f2; }
-  .prod .cod{
-    display:block;
-    text-align:center;
-    padding:8px 4px;
-    font-size:12px;
-    font-weight:bold;
-    color:var(--negro);
-  }
-  .estado{ text-align:center; font-size:13px; color:#a00; padding:40px 16px; grid-column:1/-1; }
-</style>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap">
+<link rel="stylesheet" href="assets/nebraska.css">
 </head>
 <body>
-<div class="wrap">
-  <a class="volver" href="menu.html">← Volver al catálogo</a>
-  <h1 id="titulo">Cargando…</h1>
-  <div class="grid" id="grid">
-    <div class="estado">Cargando productos…</div>
+
+<header class="nb-header">
+  <div class="nb-bar">
+    <a class="nb-logo" href="menu.html"><i></i><span>NEBRASKA</span></a>
+    <span class="nb-spacer"></span>
+    <a class="nb-btn" href="menu.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>
+      Ver catálogo
+    </a>
   </div>
-</div>
+  <div class="nb-search">
+    <div class="nb-field">
+      <svg class="lupa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="nb-q" type="search" autocomplete="off" autocapitalize="characters" spellcheck="false"
+             placeholder="Buscar por código (ej: NECO02024K)" aria-label="Buscar producto por código">
+      <button class="nb-limpiar" type="button" aria-label="Borrar búsqueda">&times;</button>
+    </div>
+    <div class="nb-res" id="nb-res"></div>
+  </div>
+</header>
 
+<main class="nb-wrap">
+  <div class="nb-acciones">
+    <a class="nb-btn nb-btn--claro" href="menu.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      Volver
+    </a>
+  </div>
+
+  <h1 class="nb-titulo" id="titulo">Cargando…</h1>
+  <p class="nb-sub" id="subtitulo">&nbsp;</p>
+
+  <div class="nb-grid" id="grid">
+    <div class="nb-skel nb-skel-prod"></div>
+    <div class="nb-skel nb-skel-prod"></div>
+    <div class="nb-skel nb-skel-prod"></div>
+    <div class="nb-skel nb-skel-prod"></div>
+  </div>
+
+  <p class="nb-pie">NEBRASKA · Precios sugeridos de venta</p>
+</main>
+
+<script src="assets/nebraska.js"></script>
 <script>
-const params = new URLSearchParams(window.location.search);
-const cat = params.get("cat");
+var cat = new URLSearchParams(location.search).get("cat");
+var grid = document.getElementById("grid");
 
-fetch(`fichas/manifest.json?t=${Date.now()}`)
-  .then(r => r.json())
-  .then(data => {
-    const info = data.categorias[cat];
-    const grid = document.getElementById("grid");
-    if (!info) {
-      document.getElementById("titulo").textContent = "Categoría no encontrada";
-      grid.innerHTML = "";
-      return;
-    }
-    document.getElementById("titulo").textContent = info.nombre;
-    grid.innerHTML = "";
-    info.productos.forEach(codigo => {
-      const a = document.createElement("a");
-      a.className = "prod";
-      a.href = `ficha-producto.html?id=${codigo}&cat=${cat}`;
-      a.innerHTML = `
-        <img src="fichas/${cat}/${codigo}.png" loading="lazy" alt="${codigo}">
-        <span class="cod">${codigo}</span>
-      `;
-      grid.appendChild(a);
-    });
-  })
-  .catch(() => {
-    document.getElementById("grid").innerHTML =
-      '<div class="estado">No se pudo cargar la categoría</div>';
+NB.manifest().then(function (data) {
+  var info = data.categorias[cat];
+
+  if (!info) {
+    document.getElementById("titulo").textContent = "Categoría no encontrada";
+    document.getElementById("subtitulo").textContent = "";
+    grid.innerHTML =
+      '<div class="nb-estado"><strong>Esta categoría no existe</strong>Puede que el link esté desactualizado.' +
+      '<br><a class="nb-btn" href="menu.html">Ver catálogo completo</a></div>';
+    return;
+  }
+
+  NB.registrarVisita(cat, null);
+
+  document.title = info.nombre + " — Nebraska";
+  document.getElementById("titulo").textContent = info.nombre;
+  var cant = info.productos.length;
+  document.getElementById("subtitulo").textContent = cant + (cant === 1 ? " producto" : " productos");
+
+  grid.innerHTML = "";
+  info.productos.forEach(function (codigo) {
+    grid.appendChild(NB.tarjeta(codigo, cat));
   });
+}).catch(function () {
+  grid.innerHTML =
+    '<div class="nb-estado"><strong>No se pudo cargar la categoría</strong>Revisá tu conexión e intentá de nuevo.' +
+    '<br><a class="nb-btn" href="menu.html">Ver catálogo</a></div>';
+});
 </script>
 </body>
 </html>
