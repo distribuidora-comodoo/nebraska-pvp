@@ -83,6 +83,7 @@ img{ max-width:100%; }
   margin-right:9px;
 }
 .nb-logo span{
+  font-family:"Libre Franklin", "Franklin Gothic Medium", Arial, sans-serif;
   font-weight:800;
   font-style:italic;
   font-size:20px;
