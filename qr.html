@@ -15,11 +15,11 @@
   /* ---- panel de opciones ---- */
   .qr-panel{
     background:#fff; border:1px solid var(--linea); border-radius:var(--radio);
-    box-shadow:var(--sombra); padding:16px; margin-bottom:20px;
+    box-shadow:var(--sombra); padding:16px; margin-bottom:16px;
   }
   .qr-fila{ display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
   .qr-campo{ flex:1 1 220px; min-width:0; }
-  .qr-campo label{
+  .qr-campo label, .qr-rotulo{
     display:block; font-size:11.5px; font-weight:700; text-transform:uppercase;
     letter-spacing:.06em; color:var(--suave); margin-bottom:6px;
   }
@@ -31,33 +31,134 @@
   .qr-campo input:focus, .qr-campo select:focus{ outline:0; border-color:var(--naranja); }
   .qr-aviso{ font-size:12.5px; color:var(--suave); margin-top:12px; line-height:1.5; }
   .qr-aviso b{ color:var(--negro); }
+  .nb-btn[disabled]{ opacity:.6; cursor:progress; }
+  .qr-botones{ flex:0 0 auto; display:flex; flex-wrap:wrap; gap:8px; max-width:100%; }
+  .qr-botones .nb-btn{ flex:1 1 auto; }
 
-  /* ---- grilla de etiquetas ---- */
-  .qr-grid{ display:flex; flex-wrap:wrap; gap:10px; }
-  .qr-item{
-    background:#fff; border:1px solid var(--linea); border-radius:10px;
-    padding:10px; text-align:center; width:var(--etiqueta, 150px);
+  /* ---- selector de vista (lista / cuadritos) ---- */
+  .qr-vista{ flex:0 0 auto; }
+  .qr-vista-grupo{ display:flex; gap:4px; background:#ececf0; padding:4px; border-radius:11px; }
+  .qr-vista-grupo button{
+    display:inline-flex; align-items:center; gap:6px;
+    background:transparent; border:0; border-radius:8px; cursor:pointer;
+    font-family:inherit; font-size:13px; font-weight:700; color:var(--suave);
+    padding:7px 12px; transition:background .16s ease, color .16s ease;
   }
-  .qr-item canvas{ width:100%; height:auto; display:block; image-rendering:pixelated; }
-  .qr-item .cod{ font-size:11px; font-weight:800; letter-spacing:.03em; margin-top:6px; word-break:break-all; }
-  .qr-item .cat{ font-size:9.5px; color:var(--suave); margin-top:2px; }
-  .qr-item .bajar{
-    display:inline-block; margin-top:6px; font-size:10px; font-weight:700;
-    color:var(--naranja-osc); text-decoration:none; cursor:pointer;
-  }
+  .qr-vista-grupo button svg{ width:15px; height:15px; }
+  .qr-vista-grupo button[aria-pressed="true"]{ background:#fff; color:var(--negro); box-shadow:0 1px 2px rgba(0,0,0,.08); }
 
-  /* ---- impresión: solo las etiquetas, sin nada del sitio ---- */
+  /* ---- barra de progreso ---- */
+  .qr-progreso{ display:none; margin-top:12px; }
+  .qr-progreso.activa{ display:block; }
+  .qr-progreso .barra{ height:6px; border-radius:99px; background:#ececf0; overflow:hidden; }
+  .qr-progreso .barra i{ display:block; height:100%; width:0; background:var(--naranja); transition:width .15s linear; }
+  .qr-progreso .texto{ font-size:12.5px; color:var(--suave); margin-top:6px; }
+
+  /* ---- buscador propio (no lleva a la ficha: descarga el PNG) ---- */
+  .qr-buscador{
+    background:#fff; border:1px solid var(--linea); border-radius:var(--radio);
+    box-shadow:var(--sombra); padding:16px; margin-bottom:16px;
+  }
+  .qr-buscador .campo{
+    display:flex; align-items:center; gap:9px; height:44px; padding:0 12px;
+    border:1.5px solid #dcdce1; border-radius:10px;
+  }
+  .qr-buscador .campo:focus-within{ border-color:var(--naranja); }
+  .qr-buscador .campo svg{ width:17px; height:17px; flex:0 0 auto; color:var(--suave); }
+  .qr-buscador .campo input{
+    flex:1; min-width:0; border:0; outline:0; background:transparent;
+    font-family:inherit; font-size:15px; font-weight:600; letter-spacing:.02em; color:var(--negro);
+  }
+  .qr-buscador .campo input::-webkit-search-cancel-button{ display:none; }
+  .qr-hallazgos{ margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+  .qr-hallazgos:empty{ display:none; }
+  .qr-hallazgo{
+    display:flex; align-items:center; gap:12px;
+    border:1px solid var(--linea); border-radius:10px; padding:8px 10px;
+  }
+  .qr-hallazgo img{ width:46px; height:46px; flex:0 0 auto; image-rendering:pixelated; }
+  .qr-hallazgo .datos{ min-width:0; flex:1; }
+  .qr-hallazgo .cod{ font-size:14px; font-weight:800; letter-spacing:.02em; word-break:break-all; }
+  .qr-hallazgo .cod b{ color:var(--naranja-osc); }
+  .qr-hallazgo .cat{ font-size:12px; color:var(--suave); }
+  .qr-vacio{ font-size:13px; color:var(--suave); padding:4px 2px; }
+
+  /* ---- árbol de categorías ---- */
+  .qr-cat{
+    background:#fff; border:1px solid var(--linea); border-radius:var(--radio);
+    box-shadow:var(--sombra); margin-bottom:10px; overflow:hidden;
+  }
+  .qr-cat-head{ display:flex; align-items:center; gap:10px; padding:6px 10px 6px 6px; }
+  .qr-cat-abrir{
+    flex:1; min-width:0; display:flex; align-items:center; gap:10px;
+    background:transparent; border:0; cursor:pointer; text-align:left;
+    font-family:inherit; padding:10px 6px; border-radius:10px; color:inherit;
+  }
+  .qr-cat-abrir:hover{ background:#faf7f5; }
+  .qr-cat-abrir .flecha{
+    width:18px; height:18px; flex:0 0 auto; color:var(--naranja);
+    transition:transform .18s ease;
+  }
+  .qr-cat[data-abierta="1"] .flecha{ transform:rotate(90deg); }
+  .qr-cat-abrir .nombre{ font-size:15px; font-weight:800; letter-spacing:.01em; }
+  .qr-cat-abrir .cant{
+    margin-left:auto; flex:0 0 auto; font-size:11.5px; font-weight:700; color:var(--suave);
+    background:#f2f2f3; border-radius:99px; padding:4px 10px;
+  }
+  .qr-cat-head .nb-btn{ flex:0 0 auto; font-size:12.5px; padding:9px 12px; }
+  .qr-cat-cuerpo{ padding:0 14px 14px; }
+
+  /* la "rama": línea que cuelga del título y de la que salen los productos */
+  .qr-rama{ border-left:2px solid #ececf0; margin-left:14px; padding-left:0; }
+
+  /* vista LISTA */
+  .qr-rama.lista .qr-hoja{
+    position:relative; display:flex; align-items:center; gap:12px;
+    margin-left:18px; padding:7px 0; border-bottom:1px solid #f4f4f6;
+  }
+  .qr-rama.lista .qr-hoja:last-child{ border-bottom:0; }
+  .qr-rama.lista .qr-hoja::before{
+    content:""; position:absolute; left:-18px; top:50%; width:16px; height:2px; background:#ececf0;
+  }
+  .qr-rama.lista .qr-hoja img{ width:42px; height:42px; flex:0 0 auto; image-rendering:pixelated; }
+  .qr-rama.lista .qr-hoja .cod{ flex:1; min-width:0; font-size:13.5px; font-weight:700; letter-spacing:.02em; word-break:break-all; }
+  .qr-rama.lista .qr-hoja .nb-btn{ flex:0 0 auto; font-size:12px; padding:8px 11px; }
+
+  /* vista CUADRITOS */
+  .qr-rama.cuadros{ display:flex; flex-wrap:wrap; gap:10px; padding:12px 0 2px 18px; }
+  .qr-rama.cuadros .qr-hoja{
+    width:112px; border:1px solid var(--linea); border-radius:10px; padding:8px;
+    text-align:center; cursor:pointer; background:#fff;
+    transition:border-color .16s ease, transform .12s ease;
+  }
+  .qr-rama.cuadros .qr-hoja:hover{ border-color:var(--naranja); }
+  .qr-rama.cuadros .qr-hoja:active{ transform:scale(.97); }
+  .qr-rama.cuadros .qr-hoja img{ width:100%; height:auto; display:block; image-rendering:pixelated; }
+  .qr-rama.cuadros .qr-hoja .cod{ font-size:10.5px; font-weight:800; letter-spacing:.02em; margin-top:6px; word-break:break-all; }
+  .qr-rama.cuadros .qr-hoja .nb-btn{ display:none; }
+
+  .qr-cargando{ font-size:13px; color:var(--suave); padding:12px 0 12px 18px; }
+
+  /* ---- impresión: solo los QR de las categorías abiertas ---- */
   @media print{
     @page{ margin:10mm; }
     body{ background:#fff; }
-    .nb-header, .qr-panel, .nb-pie, .qr-noprint{ display:none !important; }
+    .nb-header, .qr-panel, .qr-buscador, .nb-pie, .qr-noprint{ display:none !important; }
     .nb-wrap{ padding:0; max-width:none; }
-    .qr-grid{ gap:4mm; }
-    .qr-item{
-      border:1px dashed #bbb; border-radius:0; padding:3mm;
-      break-inside:avoid; page-break-inside:avoid;
+    .qr-cat{ box-shadow:none; border:0; margin:0 0 6mm; }
+    .qr-cat[data-abierta="0"]{ display:none; }
+    .qr-cat-head .nb-btn, .qr-cat-abrir .flecha, .qr-cat-abrir .cant{ display:none; }
+    .qr-cat-abrir{ padding:0 0 3mm; }
+    .qr-cat-cuerpo{ padding:0; }
+    .qr-rama{ border:0; margin:0; display:flex; flex-wrap:wrap; gap:4mm; padding:0; }
+    .qr-rama .qr-hoja{
+      width:38mm; margin:0; padding:3mm; border:1px dashed #bbb; border-radius:0;
+      display:block; text-align:center; break-inside:avoid; page-break-inside:avoid;
     }
-    .qr-item .bajar{ display:none; }
+    .qr-rama .qr-hoja::before{ display:none; }
+    .qr-rama .qr-hoja img{ width:100%; height:auto; }
+    .qr-rama .qr-hoja .cod{ font-size:9pt; font-weight:800; margin-top:2mm; }
+    .qr-rama .qr-hoja .nb-btn{ display:none; }
   }
 </style>
 </head>
@@ -73,7 +174,7 @@
 
 <main class="nb-wrap">
   <h1 class="nb-titulo qr-noprint">Generador de QR</h1>
-  <p class="nb-sub qr-noprint">Un QR por producto, listo para imprimir o descargar.</p>
+  <p class="nb-sub qr-noprint">Un QR por producto: descargalos de a uno, por categoría o todos juntos.</p>
 
   <div class="qr-panel qr-noprint">
     <div class="qr-fila">
@@ -81,77 +182,100 @@
         <label for="base">Dirección del catálogo (a dónde apuntan los QR)</label>
         <input id="base" type="url" spellcheck="false" placeholder="https://usuario.github.io/nebraska/">
       </div>
-      <div class="qr-campo">
-        <label for="cat">Categoría</label>
-        <select id="cat"><option value="">Todas</option></select>
-      </div>
-      <div class="qr-campo">
-        <label for="tam">Tamaño de etiqueta</label>
-        <select id="tam">
-          <option value="110">Chico (110 px)</option>
-          <option value="150" selected>Mediano (150 px)</option>
-          <option value="200">Grande (200 px)</option>
+
+      <div class="qr-campo" style="flex:0 1 220px">
+        <label for="res">Resolución de los PNG</label>
+        <select id="res">
+          <option value="300">~300 px (pantalla)</option>
+          <option value="600" selected>~600 px (etiquetas)</option>
+          <option value="1200">~1200 px (imprenta)</option>
         </select>
       </div>
-      <div class="qr-campo" style="flex:0 0 auto">
-        <button class="nb-btn" id="imprimir" type="button">Imprimir hoja</button>
+
+      <div class="qr-campo qr-vista">
+        <span class="qr-rotulo">Vista de los QR</span>
+        <div class="qr-vista-grupo" role="group" aria-label="Vista de los QR">
+          <button type="button" id="vista-lista" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+            Lista
+          </button>
+          <button type="button" id="vista-cuadros" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>
+            Cuadritos
+          </button>
+        </div>
+      </div>
+
+      <div class="qr-campo qr-botones">
+        <button class="nb-btn" id="zip" type="button">Descargar todos (ZIP)</button>
+        <button class="nb-btn nb-btn--claro" id="exportar" type="button">Exportar al repositorio</button>
+        <button class="nb-btn nb-btn--claro" id="imprimir" type="button">Imprimir lo abierto</button>
       </div>
     </div>
+
     <p class="qr-aviso" id="aviso"></p>
+    <div class="qr-progreso" id="progreso">
+      <div class="barra"><i id="barra"></i></div>
+      <div class="texto" id="progtexto"></div>
+    </div>
   </div>
 
-  <div class="qr-grid" id="grid"></div>
+  <!-- Buscador propio: acá el resultado NO abre la ficha, descarga el QR.
+       Por eso no usa el id "nb-q" del buscador global del catálogo. -->
+  <div class="qr-buscador qr-noprint">
+    <label class="qr-rotulo" for="qr-q">Buscar un producto y bajar solo ese QR</label>
+    <div class="campo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="qr-q" type="search" autocomplete="off" autocapitalize="characters" spellcheck="false"
+             placeholder="Código del producto (ej: NEMEA06115)" aria-label="Buscar producto por código">
+    </div>
+    <div class="qr-hallazgos" id="hallazgos"></div>
+  </div>
+
+  <div id="cats"></div>
 
   <p class="nb-pie qr-noprint">NEBRASKA · Herramienta interna</p>
 </main>
 
-<!-- Librería de QR incluida en el repo: el generador funciona sin internet -->
+<!-- Todo vive en el repo: el generador funciona sin internet. -->
 <script src="assets/qrcode.min.js"></script>
+<script src="assets/zip-simple.js"></script>
+<script src="assets/png-qr.js"></script>
 <script src="assets/nebraska.js"></script>
 <script>
 /* =====================================================================
    Genera un QR por producto apuntando a:
      <base>ficha-producto.html?id=CODIGO&cat=CATEGORIA
 
+   Se puede bajar de a uno, una categoría entera, todo el catálogo en un
+   ZIP con una carpeta por categoría, o volcarlo directo a la carpeta
+   qr/ del repositorio.
+
    La dirección base se detecta sola a partir de la URL de esta página,
    así que si la abrís desde GitHub Pages ya queda bien configurada.
-   Se puede editar a mano (queda guardada en este navegador).
    ===================================================================== */
-var $base = document.getElementById("base");
-var $cat  = document.getElementById("cat");
-var $tam  = document.getElementById("tam");
-var $grid = document.getElementById("grid");
+var $base  = document.getElementById("base");
+var $res   = document.getElementById("res");
+var $cats  = document.getElementById("cats");
 var $aviso = document.getElementById("aviso");
+var $zip   = document.getElementById("zip");
+var $exportar = document.getElementById("exportar");
+var $progreso = document.getElementById("progreso");
+var $barra = document.getElementById("barra");
+var $progtexto = document.getElementById("progtexto");
+var $q = document.getElementById("qr-q");
+var $hallazgos = document.getElementById("hallazgos");
 
 var LLAVE_BASE = "nb_qr_base";
+var LLAVE_VISTA = "nb_qr_vista";
 var datos = null;
+var indice = [];
+var vista = localStorage.getItem(LLAVE_VISTA) === "cuadros" ? "cuadros" : "lista";
 
 /* Carpeta donde vive esta página (sin el nombre del archivo). */
 function baseDetectada() {
   return new URL(".", location.href).href;
 }
-
-var guardada = localStorage.getItem(LLAVE_BASE);
-$base.value = guardada || baseDetectada();
-
-if (location.protocol === "file:") {
-  $aviso.innerHTML = "<b>Ojo:</b> abriste el archivo directo desde la carpeta. " +
-    "Escribí a mano la dirección pública del catálogo, porque la detectada (file://) " +
-    "no sirve para un QR.";
-}
-
-NB.manifest().then(function (data) {
-  datos = data;
-  Object.keys(data.categorias).forEach(function (key) {
-    var o = document.createElement("option");
-    o.value = key;
-    o.textContent = data.categorias[key].nombre;
-    $cat.appendChild(o);
-  });
-  dibujar();
-}).catch(function () {
-  $grid.innerHTML = '<div class="nb-estado"><strong>No se pudo leer el catálogo</strong>Revisá fichas/manifest.json</div>';
-});
 
 function normalizarBase(v) {
   v = (v || "").trim();
@@ -159,69 +283,433 @@ function normalizarBase(v) {
   return v;
 }
 
-function dibujar() {
-  if (!datos) return;
-  var base = normalizarBase($base.value);
-  var tam = parseInt($tam.value, 10);
-  var cats = $cat.value ? [$cat.value] : Object.keys(datos.categorias);
+function urlDe(codigo, cat) {
+  return normalizarBase($base.value) +
+    "ficha-producto.html?id=" + encodeURIComponent(codigo) +
+    "&cat=" + encodeURIComponent(cat);
+}
 
-  document.documentElement.style.setProperty("--etiqueta", tam + "px");
-  $grid.innerHTML = "";
+$base.value = localStorage.getItem(LLAVE_BASE) || baseDetectada();
 
+if (location.protocol === "file:") {
+  $aviso.innerHTML = "<b>Ojo:</b> abriste el archivo directo desde la carpeta. " +
+    "Escribí a mano la dirección pública del catálogo, porque la detectada (file://) " +
+    "no sirve para un QR.";
+}
+
+/* ---------------------------------------------------------------------
+   PNG del QR. Lo arma PNGQR (assets/png-qr.js) en vez de canvas.toBlob,
+   que tarda casi un segundo por imagen y haría eterna la descarga.
+   --------------------------------------------------------------------- */
+function pngDelQR(url, res) {
+  return PNGQR.generar(url, res, { margen: 2, correccion: "M" });
+}
+
+/* Miniatura para la pantalla. Se guarda la que ya se generó, así abrir y
+   cerrar una categoría no la vuelve a calcular. */
+var miniaturas = {};
+function miniatura(codigo, cat) {
+  var clave = codigo + "|" + cat + "|" + normalizarBase($base.value);
+  if (miniaturas[clave]) return Promise.resolve(miniaturas[clave]);
+  return pngDelQR(urlDe(codigo, cat), 160).then(function (bytes) {
+    var src = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
+    miniaturas[clave] = src;
+    return src;
+  });
+}
+
+/* Si cambia la dirección base, las miniaturas viejas ya no sirven. */
+function olvidarMiniaturas() {
+  Object.keys(miniaturas).forEach(function (k) { URL.revokeObjectURL(miniaturas[k]); });
+  miniaturas = {};
+}
+
+/* --------------------------- descargas ------------------------------ */
+
+/* Windows y macOS no aceptan estos caracteres en nombres de archivo. */
+function nombreSeguro(s) {
+  return String(s)
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s.]+|[\s.]+$/g, "")
+    .slice(0, 120) || "sin-nombre";
+}
+
+function hoy() {
+  var d = new Date(), dos = function (n) { return (n < 10 ? "0" : "") + n; };
+  return d.getFullYear() + "-" + dos(d.getMonth() + 1) + "-" + dos(d.getDate());
+}
+
+function bajarBlob(blob, nombre) {
+  var href = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = href;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(href); }, 60000);
+}
+
+/* Un solo producto. */
+function bajarUno(codigo, cat) {
+  return pngDelQR(urlDe(codigo, cat), parseInt($res.value, 10)).then(function (bytes) {
+    bajarBlob(new Blob([bytes], { type: "image/png" }), codigo + ".png");
+  });
+}
+
+function mostrarProgreso(hechos, total, texto) {
+  $progreso.classList.add("activa");
+  $barra.style.width = (total ? (hechos / total) * 100 : 0) + "%";
+  $progtexto.textContent = texto;
+}
+
+/* Recorre la lista generando los PNG y se los pasa a "guardar".
+   De a tandas, para que la pestaña no se congele. El respiro es con
+   setTimeout y no con requestAnimationFrame porque éste se frena si el
+   usuario se va a otra pestaña, y quedaría colgado a mitad de camino. */
+function generarTodos(lista, guardar) {
+  var res = parseInt($res.value, 10);
+  var fallados = [];
+  var i = 0;
+
+  function siguiente() {
+    if (i >= lista.length) return Promise.resolve(fallados);
+
+    var p = lista[i];
+    return pngDelQR(urlDe(p.codigo, p.cat), res)
+      .then(function (bytes) { return guardar(p, bytes); })
+      .catch(function () { fallados.push(p.codigo); })
+      .then(function () {
+        i++;
+        mostrarProgreso(i, lista.length, "Generando QR " + i + " de " + lista.length + "…");
+        if (i % 25 === 0) {
+          return new Promise(function (r) { setTimeout(function () { r(siguiente()); }, 0); });
+        }
+        return siguiente();
+      });
+  }
+  return siguiente();
+}
+
+/* Deja los botones bloqueados mientras dura una descarga larga. */
+function ocupado(si) {
+  [$zip, $exportar].forEach(function (b) { b.disabled = si; });
+  document.querySelectorAll(".qr-bajar-cat").forEach(function (b) { b.disabled = si; });
+}
+
+/* ZIP de una lista de productos, con una carpeta por categoría.
+     QR-Nebraska-catalogo-2026-08-21.zip
+       └ Herramientas Eléctricas/NEMEA06115.png  */
+function bajarZip(lista, sufijo) {
+  if (!lista.length) return;
+  ocupado(true);
+  $zip.textContent = "Generando…";
+
+  var zip = new ZipSimple();
+
+  return generarTodos(lista, function (p, bytes) {
+    zip.agregar(nombreSeguro(p.nombre) + "/" + nombreSeguro(p.codigo) + ".png", bytes);
+  }).then(function (fallados) {
+    $progtexto.textContent = "Armando el ZIP…";
+    var blob = zip.blob();
+    bajarBlob(blob, "QR-Nebraska-" + nombreSeguro(sufijo) + "-" + hoy() + ".zip");
+
+    var mb = (blob.size / 1048576).toFixed(1);
+    mostrarProgreso(1, 1,
+      "Listo: " + (lista.length - fallados.length) + " PNG (" + mb + " MB)." +
+      (fallados.length ? " No salieron: " + fallados.join(", ") : ""));
+  }).catch(function (err) {
+    mostrarProgreso(0, 1, "Se cortó la descarga: " + (err && err.message ? err.message : err));
+  }).then(function () {
+    ocupado(false);
+    $zip.textContent = "Descargar todos (ZIP)";
+  });
+}
+
+/* ---------------------------------------------------------------------
+   Exportar al repositorio: escribe qr/<categoria>/<CODIGO>.png dentro de
+   la carpeta del repo que elija el usuario. Usa las CLAVES de categoría
+   (electricas, one_power…) para que quede igual que lo que genera
+   herramientas/generar-qr.js y no haya dos convenciones dando vueltas.
+
+   Si el navegador no deja elegir carpeta (Firefox y Safari todavía no
+   tienen esta API), se baja un ZIP con la misma estructura para
+   descomprimir en la raíz del repo: el resultado final es el mismo.
+   --------------------------------------------------------------------- */
+function exportarRepo() {
+  var lista = todosLosProductos();
+  if (!lista.length) return;
+
+  if (typeof window.showDirectoryPicker !== "function") {
+    return exportarComoZip(lista);
+  }
+
+  var raiz;
+  window.showDirectoryPicker({ id: "nebraska-repo", mode: "readwrite" })
+    .then(function (dir) {
+      raiz = dir;
+      ocupado(true);
+      $exportar.textContent = "Exportando…";
+      return raiz.getDirectoryHandle("qr", { create: true });
+    })
+    .then(function (carpetaQR) {
+      /* Una subcarpeta por categoría, creada una sola vez. */
+      var carpetas = {};
+      function carpetaDe(cat) {
+        if (!carpetas[cat]) carpetas[cat] = carpetaQR.getDirectoryHandle(cat, { create: true });
+        return carpetas[cat];
+      }
+
+      return generarTodos(lista, function (p, bytes) {
+        return carpetaDe(p.cat)
+          .then(function (dir) { return dir.getFileHandle(p.codigo + ".png", { create: true }); })
+          .then(function (archivo) { return archivo.createWritable(); })
+          .then(function (w) { return w.write(bytes).then(function () { return w.close(); }); });
+      });
+    })
+    .then(function (fallados) {
+      mostrarProgreso(1, 1,
+        "Listo: " + (lista.length - fallados.length) + " PNG escritos en " +
+        raiz.name + "/qr/. Ya podés commitearlos." +
+        (fallados.length ? " No salieron: " + fallados.join(", ") : ""));
+    })
+    .catch(function (err) {
+      /* Si el usuario cierra el diálogo de carpeta no es un error. */
+      if (err && (err.name === "AbortError" || err.name === "NotAllowedError")) {
+        $progreso.classList.remove("activa");
+      } else {
+        mostrarProgreso(0, 1, "No se pudo exportar: " + (err && err.message ? err.message : err));
+      }
+    })
+    .then(function () {
+      ocupado(false);
+      $exportar.textContent = "Exportar al repositorio";
+    });
+}
+
+/* Respaldo del exportador: mismo árbol qr/<categoria>/, pero en un ZIP. */
+function exportarComoZip(lista) {
+  ocupado(true);
+  $exportar.textContent = "Generando…";
+  var zip = new ZipSimple();
+
+  return generarTodos(lista, function (p, bytes) {
+    zip.agregar("qr/" + p.cat + "/" + p.codigo + ".png", bytes);
+  }).then(function (fallados) {
+    $progtexto.textContent = "Armando el ZIP…";
+    bajarBlob(zip.blob(), "qr-para-el-repo-" + hoy() + ".zip");
+    mostrarProgreso(1, 1,
+      "Listo: " + (lista.length - fallados.length) + " PNG. Este navegador no deja " +
+      "escribir carpetas, así que bajó un ZIP: descomprimilo en la raíz del repo y " +
+      "queda armado el árbol qr/<categoría>/.");
+  }).catch(function (err) {
+    mostrarProgreso(0, 1, "No se pudo exportar: " + (err && err.message ? err.message : err));
+  }).then(function () {
+    ocupado(false);
+    $exportar.textContent = "Exportar al repositorio";
+  });
+}
+
+/* ------------------------ árbol de categorías ----------------------- */
+
+function productosDe(cat) {
+  return (datos.categorias[cat].productos || []).map(function (codigo) {
+    return { codigo: codigo, cat: cat, nombre: datos.categorias[cat].nombre };
+  });
+}
+
+function todosLosProductos() {
   var lista = [];
-  cats.forEach(function (cat) {
-    (datos.categorias[cat].productos || []).forEach(function (codigo) {
-      lista.push({ codigo: codigo, cat: cat, nombre: datos.categorias[cat].nombre });
+  Object.keys(datos.categorias).forEach(function (cat) {
+    lista = lista.concat(productosDe(cat));
+  });
+  return lista;
+}
+
+var FLECHA = '<svg class="flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+
+function armarArbol() {
+  $cats.innerHTML = "";
+
+  Object.keys(datos.categorias).forEach(function (cat) {
+    var info = datos.categorias[cat];
+    var cant = (info.productos || []).length;
+
+    var sec = document.createElement("section");
+    sec.className = "qr-cat";
+    sec.dataset.abierta = "0";
+    sec.dataset.cat = cat;
+    sec.innerHTML =
+      '<div class="qr-cat-head">' +
+        '<button class="qr-cat-abrir" type="button" aria-expanded="false">' +
+          FLECHA +
+          '<span class="nombre">' + NB.escapar(info.nombre) + "</span>" +
+          '<span class="cant">' + cant + " QR</span>" +
+        "</button>" +
+        '<button class="nb-btn nb-btn--claro qr-bajar-cat" type="button">Descargar carpeta</button>' +
+      "</div>" +
+      '<div class="qr-cat-cuerpo" hidden><div class="qr-rama ' + vista + '"></div></div>';
+
+    var cuerpo = sec.querySelector(".qr-cat-cuerpo");
+    var abrir = sec.querySelector(".qr-cat-abrir");
+
+    abrir.addEventListener("click", function () {
+      var abierta = sec.dataset.abierta === "1";
+      sec.dataset.abierta = abierta ? "0" : "1";
+      abrir.setAttribute("aria-expanded", abierta ? "false" : "true");
+      cuerpo.hidden = abierta;
+      if (!abierta) pintarRama(sec);
+    });
+
+    sec.querySelector(".qr-bajar-cat").addEventListener("click", function () {
+      bajarZip(productosDe(cat), info.nombre);
+    });
+
+    $cats.appendChild(sec);
+  });
+
+  $aviso.innerHTML = "<b>" + todosLosProductos().length + " QR</b> en " +
+    Object.keys(datos.categorias).length + " categorías. Cada uno abre la ficha del " +
+    "producto: verificá que la dirección de arriba sea la pública.";
+}
+
+/* Dibuja los productos de una categoría recién abierta. Se hace sólo al
+   abrirla, así entrar a la página no cuesta 200 QR de golpe. */
+function pintarRama(sec) {
+  var rama = sec.querySelector(".qr-rama");
+  if (rama.dataset.pintada === normalizarBase($base.value) + "|" + vista) return;
+  rama.dataset.pintada = normalizarBase($base.value) + "|" + vista;
+
+  var lista = productosDe(sec.dataset.cat);
+  rama.className = "qr-rama " + vista;
+  rama.innerHTML = '<div class="qr-cargando">Generando ' + lista.length + " QR…</div>";
+
+  var frag = document.createDocumentFragment();
+  var pendientes = lista.map(function (p) {
+    var hoja = document.createElement("div");
+    hoja.className = "qr-hoja";
+    hoja.title = "Descargar el QR de " + p.codigo;
+    hoja.innerHTML =
+      '<img alt="QR de ' + NB.escapar(p.codigo) + '">' +
+      '<span class="cod">' + NB.escapar(p.codigo) + "</span>" +
+      '<button class="nb-btn qr-bajar-uno" type="button">Descargar</button>';
+
+    hoja.querySelector(".qr-bajar-uno").addEventListener("click", function (e) {
+      e.stopPropagation();
+      bajarUno(p.codigo, p.cat);
+    });
+    /* En cuadritos el botón no se ve: se baja tocando el cuadrito. */
+    hoja.addEventListener("click", function () {
+      if (vista === "cuadros") bajarUno(p.codigo, p.cat);
+    });
+
+    frag.appendChild(hoja);
+    return miniatura(p.codigo, p.cat).then(function (src) {
+      hoja.querySelector("img").src = src;
     });
   });
 
-  if (!$cat.value) {
-    $aviso.innerHTML = "<b>" + lista.length + " QR</b> — uno por producto del catálogo. " +
-      "Cada uno abre la ficha del producto. Verificá que la dirección de arriba sea la pública.";
-  } else {
-    $aviso.innerHTML = "<b>" + lista.length + " QR</b> de " + NB.escapar(datos.categorias[$cat.value].nombre) + ".";
+  Promise.all(pendientes).then(function () {
+    rama.innerHTML = "";
+    rama.appendChild(frag);
+  });
+}
+
+/* Cambiar de vista sólo repinta lo que está abierto. */
+function cambiarVista(nueva) {
+  vista = nueva;
+  localStorage.setItem(LLAVE_VISTA, nueva);
+  document.getElementById("vista-lista").setAttribute("aria-pressed", String(nueva === "lista"));
+  document.getElementById("vista-cuadros").setAttribute("aria-pressed", String(nueva === "cuadros"));
+
+  document.querySelectorAll(".qr-cat").forEach(function (sec) {
+    var rama = sec.querySelector(".qr-rama");
+    if (sec.dataset.abierta === "1") pintarRama(sec);
+    else { rama.className = "qr-rama " + vista; rama.dataset.pintada = ""; rama.innerHTML = ""; }
+  });
+}
+
+/* ------------------------------ buscador ---------------------------- */
+
+function buscar() {
+  var q = $q.value.trim();
+  $hallazgos.innerHTML = "";
+  if (!q || !datos) return;
+
+  var k = q.toUpperCase().normalize("NFD").replace(/[^A-Z0-9]/g, "");
+  if (!k) return;
+
+  var empieza = [], contiene = [];
+  indice.forEach(function (it) {
+    var i = it.key.indexOf(k);
+    if (i === 0) empieza.push(it);
+    else if (i > 0) contiene.push(it);
+  });
+  var res = empieza.concat(contiene).slice(0, 10);
+
+  if (!res.length) {
+    $hallazgos.innerHTML = '<div class="qr-vacio">Ningún producto con “' + NB.escapar(q) + "”.</div>";
+    return;
   }
 
-  /* Se dibuja de a tandas para que el navegador no se trabe con 200+. */
-  var i = 0;
-  (function tanda() {
-    var fin = Math.min(i + 20, lista.length);
-    for (; i < fin; i++) armarEtiqueta(lista[i], base, tam);
-    if (i < lista.length) requestAnimationFrame(tanda);
-  })();
-}
+  res.forEach(function (it) {
+    var fila = document.createElement("div");
+    fila.className = "qr-hallazgo";
+    fila.innerHTML =
+      '<img alt="QR de ' + NB.escapar(it.codigo) + '">' +
+      '<div class="datos">' +
+        '<div class="cod">' + resaltar(it.codigo, q) + "</div>" +
+        '<div class="cat">' + NB.escapar(it.catNombre) + "</div>" +
+      "</div>" +
+      '<button class="nb-btn" type="button">Descargar PNG</button>';
 
-function armarEtiqueta(p, base, tam) {
-  var url = base + "ficha-producto.html?id=" + encodeURIComponent(p.codigo) + "&cat=" + encodeURIComponent(p.cat);
+    fila.querySelector("button").addEventListener("click", function () {
+      bajarUno(it.codigo, it.cat);
+    });
+    $hallazgos.appendChild(fila);
 
-  var caja = document.createElement("div");
-  caja.className = "qr-item";
-  var canvas = document.createElement("canvas");
-  caja.appendChild(canvas);
-  caja.insertAdjacentHTML("beforeend",
-    '<div class="cod">' + NB.escapar(p.codigo) + "</div>" +
-    '<div class="cat">' + NB.escapar(p.nombre) + "</div>" +
-    '<a class="bajar">Descargar PNG</a>');
-  $grid.appendChild(caja);
-
-  QRCode.toCanvas(canvas, url, { width: tam * 3, margin: 2, errorCorrectionLevel: "M" }, function (err) {
-    if (err) caja.querySelector(".cod").textContent = "Error: " + p.codigo;
-  });
-
-  caja.querySelector(".bajar").addEventListener("click", function () {
-    var a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = p.codigo + ".png";
-    a.click();
+    miniatura(it.codigo, it.cat).then(function (src) {
+      fila.querySelector("img").src = src;
+    });
   });
 }
+
+/* Marca en naranja la parte del código que se escribió. */
+function resaltar(codigo, q) {
+  var k = q.trim().toUpperCase();
+  var i = k ? codigo.toUpperCase().indexOf(k) : -1;
+  if (i < 0) return NB.escapar(codigo);
+  return NB.escapar(codigo.slice(0, i)) + "<b>" + NB.escapar(codigo.slice(i, i + k.length)) +
+         "</b>" + NB.escapar(codigo.slice(i + k.length));
+}
+
+/* ------------------------------ arranque ---------------------------- */
+
+NB.manifest().then(function (data) {
+  datos = data;
+  indice = NB.indice(data);
+  cambiarVista(vista);
+  armarArbol();
+}).catch(function () {
+  $cats.innerHTML = '<div class="nb-estado"><strong>No se pudo leer el catálogo</strong>Revisá fichas/manifest.json</div>';
+});
 
 $base.addEventListener("change", function () {
   localStorage.setItem(LLAVE_BASE, normalizarBase($base.value));
-  dibujar();
+  olvidarMiniaturas();
+  document.querySelectorAll(".qr-cat").forEach(function (sec) {
+    sec.querySelector(".qr-rama").dataset.pintada = "";
+    if (sec.dataset.abierta === "1") pintarRama(sec);
+  });
+  buscar();
 });
-$cat.addEventListener("change", dibujar);
-$tam.addEventListener("change", dibujar);
+
+document.getElementById("vista-lista").addEventListener("click", function () { cambiarVista("lista"); });
+document.getElementById("vista-cuadros").addEventListener("click", function () { cambiarVista("cuadros"); });
+$zip.addEventListener("click", function () { bajarZip(todosLosProductos(), "catalogo"); });
+$exportar.addEventListener("click", exportarRepo);
+$q.addEventListener("input", buscar);
 document.getElementById("imprimir").addEventListener("click", function () { window.print(); });
 </script>
 </body>
