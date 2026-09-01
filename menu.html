@@ -55,6 +55,19 @@
     height:16px;
     color:#8a8a8a;
   }
+
+  /* variante de acción: armar el PDF de impresión */
+  .nb-banner-pdf--accion{ margin-top:-12px; }
+  .nb-banner-pdf--accion .ic{
+    width:34px;
+    height:34px;
+    padding:7px;
+    border-radius:9px;
+    background:#fc771d;
+    color:#fff;
+  }
+  .nb-banner-pdf--accion:hover{ border-left-color:#ff8b3d; }
+  .nb-banner-pdf--accion .flecha{ color:#fc771d; }
 </style>
 </head>
 <body>
@@ -82,6 +95,12 @@
   <a class="nb-banner-pdf" href="https://drive.google.com/file/d/1a0Gi2UGH8Bv5koPII8cMGI0ezpHFYTLi/view" target="_blank" rel="noopener">
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     <span class="txt">Ver catálogo completo (PDF)<small>Todos los productos y precios en un solo documento</small></span>
+    <span class="flecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></span>
+  </a>
+
+  <a class="nb-banner-pdf nb-banner-pdf--accion" href="seleccionar.html">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    <span class="txt">Armar PDF para imprimir<small>Elegí los productos y descargá solo esas hojas de PVP</small></span>
     <span class="flecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></span>
   </a>
 

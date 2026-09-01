@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1d1d1d">
+<title>Armar PDF para imprimir — Nebraska</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@1,800&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap">
+<link rel="stylesheet" href="assets/nebraska.css">
+<style>
+  /* deja lugar para la barra fija de abajo */
+  body{ padding-bottom:96px; }
+
+  /* ---------------- filtros dentro del header oscuro ---------------- */
+  .sel-filtros{
+    max-width:940px; margin:0 auto; padding:0 14px 12px;
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .sel-filtros .nb-field{ flex:1 1 210px; }
+  .sel-select{
+    flex:1 1 150px; min-width:0; height:44px; padding:0 10px;
+    background:rgba(255,255,255,.1); color:#fff;
+    border:1.5px solid rgba(255,255,255,.16); border-radius:11px;
+    font-family:inherit; font-size:14px; font-weight:600;
+  }
+  .sel-select:focus{ outline:0; border-color:var(--naranja); background:#fff; color:var(--negro); }
+  .sel-select option{ color:var(--negro); background:#fff; }
+
+  /* ------------------- categoría plegable (acordeón) ---------------- */
+  .sel-cat{
+    background:#fff; border:1px solid var(--linea); border-radius:var(--radio);
+    box-shadow:var(--sombra); margin-bottom:10px; overflow:hidden;
+  }
+  .sel-cat-head{ display:flex; align-items:center; gap:8px; padding:6px 10px 6px 6px; }
+  .sel-cat-abrir{
+    flex:1; min-width:0; display:flex; align-items:center; gap:10px;
+    background:transparent; border:0; cursor:pointer; text-align:left;
+    font-family:inherit; padding:10px 6px; border-radius:10px; color:inherit;
+  }
+  .sel-cat-abrir:hover{ background:#faf7f5; }
+  .sel-cat-abrir .flecha{
+    width:18px; height:18px; flex:0 0 auto; color:var(--naranja);
+    transition:transform .18s ease;
+  }
+  .sel-cat[data-abierta="1"] .flecha{ transform:rotate(90deg); }
+  .sel-cat-abrir .nombre{ font-size:15px; font-weight:800; letter-spacing:.01em; }
+  .sel-cat-abrir .cant{
+    margin-left:auto; flex:0 0 auto; font-size:11.5px; font-weight:700; color:var(--suave);
+    background:#f2f2f3; border-radius:99px; padding:4px 10px; white-space:nowrap;
+  }
+  .sel-cat-abrir .cant.puestos{ color:#fff; background:var(--naranja); }
+  .sel-cat-head .nb-btn{ flex:0 0 auto; font-size:12.5px; padding:9px 12px; }
+  .sel-cat-cuerpo{ padding:0 12px 14px; }
+
+  /* ------------------------- tarjeta producto ----------------------- */
+  .sel-item{
+    position:relative; display:block; width:100%; padding:0;
+    background:var(--blanco); border:2px solid var(--linea); border-radius:12px;
+    overflow:hidden; cursor:pointer; font:inherit; color:inherit;
+    text-align:center; -webkit-tap-highlight-color:transparent;
+    transition:border-color .15s ease, box-shadow .15s ease, transform .1s ease;
+  }
+  .sel-item:hover{ border-color:#c9c9cf; }
+  .sel-item:active{ transform:scale(.985); }
+  .sel-item.on{ border-color:var(--naranja); box-shadow:0 0 0 3px rgba(252,119,29,.15); }
+
+  /* La ficha se ve apagada mientras no está elegida; al tocarla toma
+     todo su color. Así de un vistazo se ve qué entra en el PDF. */
+  .sel-item img{
+    width:100%; aspect-ratio:3/4; object-fit:contain;
+    display:block; background:#fff;
+    filter:grayscale(.72) opacity(.62);
+    transition:filter .2s ease;
+  }
+  .sel-item:hover img{ filter:grayscale(.35) opacity(.85); }
+  .sel-item.on img{ filter:none; }
+
+  .sel-item .cod{
+    display:block; padding:9px 6px 11px; font-size:12px; font-weight:700;
+    letter-spacing:.02em; border-top:1px solid var(--linea); color:var(--suave);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    transition:color .2s ease, background .2s ease;
+  }
+  .sel-item.on .cod{ background:#fff4ec; color:var(--naranja-osc); }
+
+  .sel-check{
+    position:absolute; top:8px; right:8px; width:26px; height:26px;
+    border-radius:50%; background:rgba(255,255,255,.94);
+    border:2px solid #d0d0d6; box-shadow:0 1px 3px rgba(0,0,0,.12);
+    display:flex; align-items:center; justify-content:center; color:#fff;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .sel-check svg{ width:14px; height:14px; opacity:0; transition:opacity .15s ease; }
+  .sel-item.on .sel-check{ background:var(--naranja); border-color:var(--naranja); }
+  .sel-item.on .sel-check svg{ opacity:1; }
+
+  /* producto sin ficha subida: no se puede imprimir */
+  .sel-item.sin{ opacity:.5; cursor:not-allowed; }
+  .sel-item.sin:hover{ border-color:var(--linea); }
+  .sel-item.sin .sel-check{ display:none; }
+  .sel-item .vacio{
+    width:100%; aspect-ratio:3/4; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:7px;
+    background:#fbfbfc; color:#b3b3b9; font-size:11px; font-weight:600; padding:10px;
+  }
+  .sel-item .vacio svg{ width:24px; height:24px; }
+
+  /* ---------------------------- barra fija -------------------------- */
+  .sel-barra{
+    position:fixed; left:0; right:0; bottom:0; z-index:60;
+    background:#fff; border-top:1px solid var(--linea);
+    box-shadow:0 -4px 18px rgba(0,0,0,.1);
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  }
+  .sel-barra-in{
+    max-width:940px; margin:0 auto;
+    display:flex; align-items:center; gap:10px;
+  }
+  .sel-cuenta{ flex:1 1 auto; min-width:0; line-height:1.25; }
+  .sel-cuenta b{ font-size:16px; font-weight:800; display:block; }
+  .sel-cuenta small{ font-size:11.5px; color:var(--suave); }
+  .sel-barra .nb-btn{ flex:0 0 auto; }
+  .sel-barra .nb-btn[disabled]{ opacity:.4; pointer-events:none; }
+
+  /* ------------------------------ modal ----------------------------- */
+  .sel-modal{
+    position:fixed; inset:0; z-index:100; display:none;
+    background:rgba(0,0,0,.55);
+    align-items:flex-end; justify-content:center;
+  }
+  .sel-modal.abierto{ display:flex; }
+  @media(min-width:620px){ .sel-modal{ align-items:center; } }
+
+  .sel-caja{
+    background:#fff; width:100%; max-width:480px;
+    border-radius:16px 16px 0 0; padding:18px 18px 22px;
+    max-height:92vh; overflow-y:auto;
+  }
+  @media(min-width:620px){ .sel-caja{ border-radius:16px; } }
+
+  .sel-caja h2{ font-size:18px; font-weight:800; letter-spacing:-.01em; }
+  .sel-caja .intro{ font-size:13px; color:var(--suave); margin:3px 0 16px; }
+  .sel-cerrar{
+    position:absolute; top:0; right:0; width:34px; height:34px;
+    border:0; background:transparent; font-size:22px; line-height:1;
+    color:var(--suave); cursor:pointer; font-family:inherit;
+  }
+  .sel-cab{ position:relative; }
+
+  .sel-rotulo{
+    font-size:11.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--suave); margin:0 0 9px;
+  }
+
+  /* opciones de armado de hoja */
+  .sel-opts{ display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .sel-opt{
+    display:flex; align-items:center; gap:13px; width:100%;
+    padding:11px 13px; background:#fff; cursor:pointer;
+    border:2px solid var(--linea); border-radius:12px;
+    font:inherit; color:inherit; text-align:left;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .sel-opt:hover{ border-color:#c9c9cf; }
+  .sel-opt.on{ border-color:var(--naranja); background:#fff8f3; }
+  .sel-opt .txt{ flex:1 1 auto; min-width:0; }
+  .sel-opt .txt b{ display:block; font-size:14.5px; font-weight:700; }
+  .sel-opt .txt small{ font-size:11.5px; color:var(--suave); }
+  .sel-opt .hojas{
+    flex:0 0 auto; font-size:11.5px; font-weight:700;
+    color:var(--suave); text-align:right; white-space:nowrap;
+  }
+  .sel-opt.on .hojas{ color:var(--naranja-osc); }
+
+  /* dibujitos de la hoja A4 */
+  .dib{
+    flex:0 0 auto; display:grid; gap:2px; padding:2.5px;
+    background:#fff; border:1.5px solid #cfcfd6; border-radius:3px;
+  }
+  .dib i{ display:block; background:#ffe2cd; border:1px solid var(--naranja); border-radius:1px; }
+  .sel-opt.on .dib{ border-color:var(--naranja); }
+  .dib-1{ width:33px; aspect-ratio:210/297; }
+  .dib-2{ width:47px; aspect-ratio:297/210; grid-template-columns:1fr 1fr; }
+  .dib-4{ width:33px; aspect-ratio:210/297; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; }
+
+  /* lista de revisión */
+  .sel-revisar{ margin-bottom:16px; }
+  .sel-revisar > summary{
+    cursor:pointer; font-size:13px; font-weight:700; color:var(--naranja-osc);
+    list-style:none; padding:4px 0;
+  }
+  .sel-revisar > summary::-webkit-details-marker{ display:none; }
+  .sel-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+  .sel-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    background:#f4f4f5; border:1px solid var(--linea); border-radius:999px;
+    padding:5px 6px 5px 11px; font-size:11.5px; font-weight:700; font-family:inherit;
+  }
+  .sel-chip button{
+    border:0; background:#dcdce1; color:#5a5a60; cursor:pointer;
+    width:17px; height:17px; border-radius:50%; font-size:12px; line-height:1;
+    display:flex; align-items:center; justify-content:center; font-family:inherit;
+  }
+  .sel-chip button:hover{ background:var(--naranja); color:#fff; }
+
+  /* progreso */
+  .sel-prog{ display:none; margin-bottom:16px; }
+  .sel-prog.on{ display:block; }
+  .sel-prog .riel{ height:7px; background:#ececed; border-radius:99px; overflow:hidden; }
+  .sel-prog .riel i{ display:block; height:100%; width:0; background:var(--naranja); transition:width .2s ease; }
+  .sel-prog .txt{ font-size:12px; color:var(--suave); margin-top:7px; text-align:center; }
+
+  .sel-listo{ display:none; text-align:center; padding:6px 0 4px; }
+  .sel-listo.on{ display:block; }
+  .sel-listo .tick{
+    width:46px; height:46px; margin:0 auto 10px; border-radius:50%;
+    background:#e8f7ec; color:#1c8a3c; display:flex; align-items:center; justify-content:center;
+  }
+  .sel-listo .tick svg{ width:24px; height:24px; }
+  .sel-listo b{ display:block; font-size:15px; font-weight:800; }
+  .sel-listo small{ display:block; font-size:12.5px; color:var(--suave); margin:3px 0 15px; }
+
+  .sel-aviso{
+    font-size:12px; color:#8a5a1b; background:#fff6e9;
+    border:1px solid #f2dcc0; border-radius:9px; padding:9px 11px; margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+
+<header class="nb-header">
+  <div class="nb-bar">
+    <a class="nb-logo" href="menu.html"><i></i><span>NEBRASKA</span></a>
+    <span class="nb-spacer"></span>
+    <a class="nb-btn nb-btn--claro" href="menu.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      Salir
+    </a>
+  </div>
+  <!-- Buscador propio: acá filtra la grilla, no navega a otra página,
+       así el vendedor no pierde lo que ya seleccionó. -->
+  <div class="sel-filtros">
+    <div class="nb-field">
+      <svg class="lupa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="sel-q" type="search" autocomplete="off" autocapitalize="characters" spellcheck="false"
+             placeholder="Buscar por código (ej: NECO02024K)" aria-label="Filtrar productos por código">
+      <button class="nb-limpiar" type="button" id="sel-limpiar" aria-label="Borrar búsqueda">&times;</button>
+    </div>
+    <select class="sel-select" id="sel-cat" aria-label="Filtrar por categoría">
+      <option value="">Todas las categorías</option>
+    </select>
+  </div>
+</header>
+
+<main class="nb-wrap">
+  <h1 class="nb-titulo">Armar PDF para imprimir</h1>
+  <p class="nb-sub">Abrí una categoría y tocá los productos que necesitás. Después elegís cuántos entran por hoja y descargás el PDF listo para imprimir.</p>
+
+  <div id="contenido">
+    <div class="nb-estado">Cargando catálogo…</div>
+  </div>
+
+  <p class="nb-pie">NEBRASKA · Precios sugeridos de venta</p>
+</main>
+
+<!-- ------------------------- barra fija ------------------------- -->
+<div class="sel-barra">
+  <div class="sel-barra-in">
+    <div class="sel-cuenta">
+      <b id="cuenta">Ningún producto</b>
+      <small id="cuenta-sub">Tocá una ficha para agregarla</small>
+    </div>
+    <button class="nb-btn nb-btn--claro" id="vaciar" type="button" disabled>Vaciar</button>
+    <button class="nb-btn" id="armar" type="button" disabled>Armar PDF</button>
+  </div>
+</div>
+
+<!-- --------------------------- modal ---------------------------- -->
+<div class="sel-modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-tit">
+  <div class="sel-caja">
+    <div class="sel-cab">
+      <button class="sel-cerrar" id="cerrar" type="button" aria-label="Cerrar">&times;</button>
+      <h2 id="modal-tit">¿Cómo lo imprimís?</h2>
+      <p class="intro" id="modal-sub"></p>
+    </div>
+
+    <div id="paso-opciones">
+      <details class="sel-revisar" id="revisar">
+        <summary id="revisar-tit">Revisar la lista</summary>
+        <div class="sel-chips" id="chips"></div>
+      </details>
+
+      <div id="aviso-peso"></div>
+
+      <p class="sel-rotulo">Productos por hoja A4</p>
+      <div class="sel-opts" id="opts">
+        <button class="sel-opt on" type="button" data-n="1">
+          <span class="dib dib-1"><i></i></span>
+          <span class="txt"><b>1 por hoja</b><small>Hoja vertical completa, tamaño real</small></span>
+          <span class="hojas" data-hojas="1"></span>
+        </button>
+        <button class="sel-opt" type="button" data-n="2">
+          <span class="dib dib-2"><i></i><i></i></span>
+          <span class="txt"><b>2 por hoja</b><small>Hoja horizontal, mitad y mitad</small></span>
+          <span class="hojas" data-hojas="2"></span>
+        </button>
+        <button class="sel-opt" type="button" data-n="4">
+          <span class="dib dib-4"><i></i><i></i><i></i><i></i></span>
+          <span class="txt"><b>4 por hoja</b><small>Hoja vertical en cuatro, ahorra papel</small></span>
+          <span class="hojas" data-hojas="4"></span>
+        </button>
+      </div>
+
+      <button class="nb-btn nb-btn--ancho" id="generar" type="button">Descargar PDF</button>
+    </div>
+
+    <div class="sel-prog" id="prog">
+      <div class="riel"><i id="riel"></i></div>
+      <div class="txt" id="prog-txt">Preparando…</div>
+    </div>
+
+    <div class="sel-listo" id="listo">
+      <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <b>PDF descargado</b>
+      <small id="listo-sub"></small>
+      <div id="listo-aviso"></div>
+      <a class="nb-btn nb-btn--ancho" id="abrir" target="_blank" rel="noopener" style="margin-bottom:8px">Abrir para imprimir</a>
+      <button class="nb-btn nb-btn--claro nb-btn--ancho" id="listo-cerrar" type="button">Seguir eligiendo</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/jspdf.min.js"></script>
+<script src="assets/nebraska.js"></script>
+<script>
+/* =====================================================================
+   Armar PDF para imprimir
+   ---------------------------------------------------------------------
+   El vendedor elige los productos que necesita y la página arma un PDF
+   con la ficha de PVP de cada uno, ya acomodada en hojas A4.
+
+   Las fichas miden 874x1240 px (proporción 0,705) y una A4 es 210x297 mm
+   (proporción 0,707): por eso cada ficha llena la hoja casi exacta, sin
+   bordes blancos grandes ni recortes.
+
+   Las categorías arrancan plegadas y la grilla de cada una se dibuja
+   recién al abrirla, igual que en el generador de QR: entrar a la página
+   no cuesta cargar 200 fichas de golpe.
+   ===================================================================== */
+
+var LLAVE = "nb_seleccion_v1";
+
+var datos = null;          // manifest
+var carpetas = [];         // claves de categoría, para buscar fichas fuera de lugar
+var elegidos = [];         // ["categoria|CODIGO", ...]
+var abiertasAMano = {};    // categorías que el vendedor abrió él mismo
+var porHoja = 1;
+var urlPdf = null;
+
+var $cont = document.getElementById("contenido");
+var $q = document.getElementById("sel-q");
+var $cat = document.getElementById("sel-cat");
+var $modal = document.getElementById("modal");
+
+var FLECHA = '<svg class="flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+
+/* ------------------------------ guardado --------------------------- */
+function leerGuardado() {
+  try { return JSON.parse(localStorage.getItem(LLAVE)) || []; } catch (e) { return []; }
+}
+function guardar() {
+  try { localStorage.setItem(LLAVE, JSON.stringify(elegidos)); } catch (e) {}
+}
+
+/* --------------------------- utilidades ---------------------------- */
+function llave(cat, codigo) { return cat + "|" + codigo; }
+
+function normalizar(s) {
+  return String(s || "").toUpperCase().normalize("NFD").replace(/[^A-Z0-9]/g, "");
+}
+
+/* Carpetas donde puede estar la ficha: la del manifest, la carpeta base
+   y por último el resto (cubre las fichas guardadas fuera de lugar). */
+function urlsPosibles(codigo, cat) {
+  var out = [];
+  [cat, null].concat(carpetas).forEach(function (c) {
+    var u = NB.imgFicha(codigo, c);
+    if (out.indexOf(u) < 0) out.push(u);
+  });
+  return out;
+}
+
+/* Productos de una categoría que pasan los filtros de arriba. */
+function visiblesDe(cat) {
+  if ($cat.value && $cat.value !== cat) return [];
+  var q = normalizar($q.value);
+  return datos.categorias[cat].productos.filter(function (c) {
+    return !q || normalizar(c).indexOf(q) >= 0;
+  });
+}
+
+function elegidosDe(cat) {
+  return visiblesDe(cat).filter(function (c) {
+    return elegidos.indexOf(llave(cat, c)) >= 0;
+  });
+}
+
+/* --------------------------- armar la página ----------------------- */
+NB.manifest().then(function (data) {
+  datos = data;
+  carpetas = Object.keys(data.categorias);
+  elegidos = leerGuardado().filter(function (k) {
+    var p = k.split("|");
+    var info = data.categorias[p[0]];
+    return info && info.productos.indexOf(p[1]) >= 0;
+  });
+
+  carpetas.forEach(function (key) {
+    var o = document.createElement("option");
+    o.value = key;
+    o.textContent = data.categorias[key].nombre;
+    $cat.appendChild(o);
+  });
+
+  pintarCategorias();
+  filtrar();
+  actualizarBarra();
+}).catch(function () {
+  $cont.innerHTML =
+    '<div class="nb-estado"><strong>No se pudo cargar el catálogo</strong>' +
+    'Revisá tu conexión e intentá de nuevo.' +
+    '<br><a class="nb-btn" href="menu.html">Volver al catálogo</a></div>';
+});
+
+function pintarCategorias() {
+  $cont.innerHTML = "";
+
+  carpetas.forEach(function (cat) {
+    var info = datos.categorias[cat];
+
+    var sec = document.createElement("section");
+    sec.className = "sel-cat";
+    sec.dataset.cat = cat;
+    sec.dataset.abierta = "0";
+    sec.innerHTML =
+      '<div class="sel-cat-head">' +
+        '<button class="sel-cat-abrir" type="button" aria-expanded="false">' +
+          FLECHA +
+          '<span class="nombre">' + NB.escapar(info.nombre) + "</span>" +
+          '<span class="cant"></span>' +
+        "</button>" +
+        '<button class="nb-btn nb-btn--claro" type="button" data-todos>Elegir todos</button>' +
+      "</div>" +
+      '<div class="sel-cat-cuerpo" hidden><div class="nb-grid"></div></div>';
+
+    sec.querySelector(".sel-cat-abrir").addEventListener("click", function () {
+      var abierta = sec.dataset.abierta === "1";
+      abiertasAMano[cat] = !abierta;
+      abrirCategoria(sec, !abierta);
+    });
+
+    sec.querySelector("[data-todos]").addEventListener("click", function () {
+      alternarCategoria(cat, sec);
+    });
+
+    $cont.appendChild(sec);
+  });
+}
+
+function abrirCategoria(sec, abrir) {
+  sec.dataset.abierta = abrir ? "1" : "0";
+  sec.querySelector(".sel-cat-abrir").setAttribute("aria-expanded", abrir ? "true" : "false");
+  sec.querySelector(".sel-cat-cuerpo").hidden = !abrir;
+  if (abrir) pintarGrilla(sec);
+}
+
+/* Dibuja las fichas de una categoría recién abierta. Se redibuja sólo si
+   cambió el filtro, para no recargar imágenes al abrir y cerrar. */
+function pintarGrilla(sec) {
+  var cat = sec.dataset.cat;
+  var grid = sec.querySelector(".nb-grid");
+  var firma = normalizar($q.value) + "|" + $cat.value;
+  if (grid.dataset.firma === firma) return;
+  grid.dataset.firma = firma;
+
+  grid.innerHTML = "";
+  var frag = document.createDocumentFragment();
+  visiblesDe(cat).forEach(function (codigo) {
+    frag.appendChild(tarjeta(codigo, cat));
+  });
+  grid.appendChild(frag);
+}
+
+function tarjeta(codigo, cat) {
+  var b = document.createElement("button");
+  b.type = "button";
+  b.className = "sel-item";
+  b.dataset.codigo = codigo;
+  b.dataset.cat = cat;
+  if (elegidos.indexOf(llave(cat, codigo)) >= 0) b.classList.add("on");
+
+  var img = document.createElement("img");
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.alt = "Ficha " + codigo;
+
+  b.appendChild(img);
+  b.insertAdjacentHTML("beforeend",
+    '<span class="sel-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>' +
+    '<span class="cod">' + NB.escapar(codigo) + "</span>");
+
+  /* Prueba carpeta por carpeta hasta que una imagen exista. */
+  var urls = urlsPosibles(codigo, cat);
+  var i = 0;
+  img.onerror = function () {
+    i++;
+    if (i < urls.length) { img.src = urls[i]; return; }
+    img.onerror = null;
+    marcarSinFicha(b, codigo, cat);
+  };
+  img.src = urls[0];
+
+  b.addEventListener("click", function () {
+    if (b.classList.contains("sin")) return;
+    alternar(cat, codigo, b);
+  });
+
+  return b;
+}
+
+/* Producto que todavía no tiene la ficha subida: no se puede imprimir. */
+function marcarSinFicha(b, codigo, cat) {
+  b.classList.add("sin");
+  b.classList.remove("on");
+  var img = b.querySelector("img");
+  if (img) {
+    img.insertAdjacentHTML("afterend",
+      '<span class="vacio">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">' +
+      '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 15l4.5-4 4 3.5L15 10l6 5.5"/></svg>' +
+      "Ficha en preparación</span>");
+    img.remove();
+  }
+  var i = elegidos.indexOf(llave(cat, codigo));
+  if (i >= 0) { elegidos.splice(i, 1); guardar(); actualizarBarra(); }
+}
+
+/* --------------------------- selección ----------------------------- */
+function alternar(cat, codigo, b) {
+  var k = llave(cat, codigo);
+  var i = elegidos.indexOf(k);
+  if (i >= 0) { elegidos.splice(i, 1); b.classList.remove("on"); }
+  else { elegidos.push(k); b.classList.add("on"); }
+  guardar();
+  actualizarBarra();
+}
+
+/* "Elegir todos" trabaja sobre lo que dejan ver los filtros, esté la
+   categoría abierta o cerrada. Si ya estaban todos, los saca. */
+function alternarCategoria(cat, sec) {
+  var lista = visiblesDe(cat);
+  if (!lista.length) return;
+
+  var agregar = elegidosDe(cat).length < lista.length;
+
+  lista.forEach(function (codigo) {
+    var k = llave(cat, codigo);
+    var i = elegidos.indexOf(k);
+    var b = sec.querySelector('.sel-item[data-codigo="' + codigo + '"]');
+    if (b && b.classList.contains("sin")) return;
+    if (agregar && i < 0) { elegidos.push(k); if (b) b.classList.add("on"); }
+    if (!agregar && i >= 0) { elegidos.splice(i, 1); if (b) b.classList.remove("on"); }
+  });
+
+  guardar();
+  actualizarBarra();
+}
+
+function actualizarBarra() {
+  var n = elegidos.length;
+  document.getElementById("cuenta").textContent =
+    n === 0 ? "Ningún producto" : n + (n === 1 ? " producto" : " productos");
+  document.getElementById("cuenta-sub").textContent =
+    n === 0 ? "Tocá una ficha para agregarla" : "Listos para armar el PDF";
+  document.getElementById("armar").disabled = n === 0;
+  document.getElementById("vaciar").disabled = n === 0;
+
+  carpetas.forEach(actualizarCabecera);
+}
+
+function actualizarCabecera(cat) {
+  var sec = $cont.querySelector('section[data-cat="' + cat + '"]');
+  if (!sec) return;
+
+  var total = visiblesDe(cat).length;
+  var puestos = elegidosDe(cat).length;
+
+  var cant = sec.querySelector(".cant");
+  cant.textContent = puestos ? puestos + " de " + total : total;
+  cant.classList.toggle("puestos", puestos > 0);
+
+  sec.querySelector("[data-todos]").textContent =
+    (total && puestos === total) ? "Quitar todos" : "Elegir todos";
+}
+
+/* ----------------------------- filtros ----------------------------- */
+function filtrar() {
+  var q = normalizar($q.value);
+  document.getElementById("sel-limpiar").style.display = $q.value ? "flex" : "none";
+
+  var totalVisible = 0;
+
+  carpetas.forEach(function (cat) {
+    var sec = $cont.querySelector('section[data-cat="' + cat + '"]');
+    if (!sec) return;
+
+    var visibles = visiblesDe(cat).length;
+    sec.style.display = visibles ? "" : "none";
+    totalVisible += visibles;
+
+    /* Buscando o con una categoría elegida, se abre sola: si no, el
+       vendedor no vería los resultados. Al limpiar vuelve a como estaba. */
+    var forzar = (q || $cat.value) && visibles > 0;
+    abrirCategoria(sec, forzar ? true : !!abiertasAMano[cat]);
+    actualizarCabecera(cat);
+  });
+
+  var vacio = document.getElementById("sin-resultados");
+  if (!totalVisible) {
+    if (!vacio) {
+      vacio = document.createElement("div");
+      vacio.id = "sin-resultados";
+      vacio.className = "nb-estado";
+      $cont.appendChild(vacio);
+    }
+    vacio.innerHTML = "<strong>Sin resultados</strong>No hay productos que coincidan con la búsqueda.";
+    vacio.style.display = "";
+  } else if (vacio) {
+    vacio.style.display = "none";
+  }
+}
+
+$q.addEventListener("input", filtrar);
+$cat.addEventListener("change", filtrar);
+document.getElementById("sel-limpiar").addEventListener("click", function () {
+  $q.value = "";
+  filtrar();
+  $q.focus();
+});
+
+document.getElementById("vaciar").addEventListener("click", function () {
+  elegidos = [];
+  guardar();
+  [].slice.call($cont.querySelectorAll(".sel-item.on")).forEach(function (b) {
+    b.classList.remove("on");
+  });
+  actualizarBarra();
+});
+
+/* ------------------------------ modal ------------------------------ */
+function ordenCatalogo() {
+  var out = [];
+  carpetas.forEach(function (cat) {
+    datos.categorias[cat].productos.forEach(function (codigo) {
+      if (elegidos.indexOf(llave(cat, codigo)) >= 0) out.push({ cat: cat, codigo: codigo });
+    });
+  });
+  return out;
+}
+
+function abrirModal() {
+  var lista = ordenCatalogo();
+  document.getElementById("modal-sub").textContent =
+    lista.length + (lista.length === 1 ? " producto elegido" : " productos elegidos");
+
+  document.getElementById("revisar-tit").textContent = "Revisar la lista (" + lista.length + ")";
+  var chips = document.getElementById("chips");
+  chips.innerHTML = "";
+  lista.forEach(function (p) {
+    var c = document.createElement("span");
+    c.className = "sel-chip";
+    c.innerHTML = NB.escapar(p.codigo) + '<button type="button" aria-label="Quitar">&times;</button>';
+    c.querySelector("button").addEventListener("click", function () {
+      var b = $cont.querySelector('.sel-item[data-codigo="' + p.codigo + '"][data-cat="' + p.cat + '"]');
+      if (b) alternar(p.cat, p.codigo, b);
+      else {
+        var i = elegidos.indexOf(llave(p.cat, p.codigo));
+        if (i >= 0) { elegidos.splice(i, 1); guardar(); actualizarBarra(); }
+      }
+      if (!elegidos.length) cerrarModal();
+      else abrirModal();
+    });
+    chips.appendChild(c);
+  });
+
+  /* Cada ficha suma más o menos 190 KB al PDF: con muchas conviene
+     avisar antes de que el vendedor se quede esperando. */
+  document.getElementById("aviso-peso").innerHTML = lista.length > 40
+    ? '<div class="sel-aviso">Son ' + lista.length + " fichas: el PDF va a pesar cerca de " +
+      Math.round(lista.length * 0.19) + " MB y puede tardar un rato en armarse.</div>"
+    : "";
+
+  actualizarHojas();
+  document.getElementById("paso-opciones").style.display = "";
+  document.getElementById("prog").classList.remove("on");
+  document.getElementById("listo").classList.remove("on");
+  document.getElementById("revisar").open = false;
+  $modal.classList.add("abierto");
+}
+
+function cerrarModal() {
+  $modal.classList.remove("abierto");
+  if (urlPdf) { URL.revokeObjectURL(urlPdf); urlPdf = null; }
+}
+
+function actualizarHojas() {
+  var n = elegidos.length;
+  [].slice.call(document.querySelectorAll("[data-hojas]")).forEach(function (el) {
+    var por = parseInt(el.dataset.hojas, 10);
+    var hojas = Math.ceil(n / por);
+    el.textContent = hojas + (hojas === 1 ? " hoja" : " hojas");
+  });
+}
+
+document.getElementById("armar").addEventListener("click", abrirModal);
+document.getElementById("cerrar").addEventListener("click", cerrarModal);
+document.getElementById("listo-cerrar").addEventListener("click", cerrarModal);
+$modal.addEventListener("click", function (e) { if (e.target === $modal) cerrarModal(); });
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && $modal.classList.contains("abierto")) cerrarModal();
+});
+
+document.getElementById("opts").addEventListener("click", function (e) {
+  var op = e.target.closest(".sel-opt");
+  if (!op) return;
+  [].slice.call(this.querySelectorAll(".sel-opt")).forEach(function (o) { o.classList.remove("on"); });
+  op.classList.add("on");
+  porHoja = parseInt(op.dataset.n, 10);
+});
+
+/* --------------------------- armado del PDF ------------------------ */
+/* Cada opción define orientación y cuántas fichas entran por hoja. */
+var FORMATOS = {
+  1: { orient: "portrait",  cols: 1, rows: 1, margen: 6, calle: 0 },
+  2: { orient: "landscape", cols: 2, rows: 1, margen: 6, calle: 5 },
+  4: { orient: "portrait",  cols: 2, rows: 2, margen: 6, calle: 5 }
+};
+
+function cargarFicha(codigo, cat) {
+  return new Promise(function (resolver, rechazar) {
+    var urls = urlsPosibles(codigo, cat);
+    var i = 0;
+    var img = new Image();
+    img.onload = function () { resolver(img); };
+    img.onerror = function () {
+      i++;
+      if (i < urls.length) { img.src = urls[i]; return; }
+      rechazar(new Error("sin ficha"));
+    };
+    img.src = urls[0];
+  });
+}
+
+/* La ficha puede tener transparencia: se apoya sobre blanco antes de
+   pasarla a JPEG, si no el fondo sale negro en el PDF. */
+function aJpeg(img) {
+  var c = document.createElement("canvas");
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  var ctx = c.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0);
+  return { datos: c.toDataURL("image/jpeg", 0.92), w: c.width, h: c.height };
+}
+
+function respirar() {
+  return new Promise(function (r) { setTimeout(r, 0); });
+}
+
+document.getElementById("generar").addEventListener("click", async function () {
+  var lista = ordenCatalogo();
+  if (!lista.length) return;
+
+  var f = FORMATOS[porHoja];
+  var doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: f.orient });
+  var anchoHoja = f.orient === "landscape" ? 297 : 210;
+  var altoHoja = f.orient === "landscape" ? 210 : 297;
+
+  var celdaW = (anchoHoja - f.margen * 2 - f.calle * (f.cols - 1)) / f.cols;
+  var celdaH = (altoHoja - f.margen * 2 - f.calle * (f.rows - 1)) / f.rows;
+
+  document.getElementById("paso-opciones").style.display = "none";
+  var prog = document.getElementById("prog");
+  var riel = document.getElementById("riel");
+  var progTxt = document.getElementById("prog-txt");
+  prog.classList.add("on");
+
+  var puestas = 0;
+  var fallaron = [];
+
+  for (var i = 0; i < lista.length; i++) {
+    var p = lista[i];
+    progTxt.textContent = "Agregando " + p.codigo + " (" + (i + 1) + " de " + lista.length + ")";
+    riel.style.width = Math.round((i / lista.length) * 100) + "%";
+    await respirar();
+
+    try {
+      var img = await cargarFicha(p.codigo, p.cat);
+      var jpg = aJpeg(img);
+
+      if (puestas > 0 && puestas % porHoja === 0) doc.addPage();
+
+      var pos = puestas % porHoja;
+      var col = pos % f.cols;
+      var fila = Math.floor(pos / f.cols);
+      var x = f.margen + col * (celdaW + f.calle);
+      var y = f.margen + fila * (celdaH + f.calle);
+
+      var escala = Math.min(celdaW / jpg.w, celdaH / jpg.h);
+      var w = jpg.w * escala;
+      var h = jpg.h * escala;
+
+      doc.addImage(jpg.datos, "JPEG", x + (celdaW - w) / 2, y + (celdaH - h) / 2, w, h);
+      puestas++;
+    } catch (e) {
+      fallaron.push(p.codigo);
+    }
+  }
+
+  riel.style.width = "100%";
+
+  if (!puestas) {
+    prog.classList.remove("on");
+    document.getElementById("paso-opciones").style.display = "";
+    alert("No se pudo cargar ninguna ficha. Revisá tu conexión e intentá de nuevo.");
+    return;
+  }
+
+  var fecha = new Date().toISOString().slice(0, 10);
+  var nombre = "nebraska-pvp-" + puestas + "-productos-" + fecha + ".pdf";
+  doc.save(nombre);
+
+  if (urlPdf) URL.revokeObjectURL(urlPdf);
+  urlPdf = URL.createObjectURL(doc.output("blob"));
+  document.getElementById("abrir").href = urlPdf;
+
+  var hojas = Math.ceil(puestas / porHoja);
+  document.getElementById("listo-sub").textContent =
+    puestas + (puestas === 1 ? " producto" : " productos") + " en " +
+    hojas + (hojas === 1 ? " hoja" : " hojas") + " A4";
+
+  document.getElementById("listo-aviso").innerHTML = fallaron.length
+    ? '<div class="sel-aviso">No se pudieron incluir ' + fallaron.length +
+      " porque todavía no tienen la ficha subida: " + NB.escapar(fallaron.join(", ")) + "</div>"
+    : "";
+
+  prog.classList.remove("on");
+  document.getElementById("listo").classList.add("on");
+});
+</script>
+</body>
+</html>
