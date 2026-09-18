@@ -208,7 +208,38 @@
   </div>
 </div>
 
+<script>
+/* Recorrido propio de este panel, para el que entra de vez en cuando
+   y no se acuerda cómo era. Se define antes de cargar tutorial.js. */
+window.NB_TUTORIAL = {
+  clave: "destacados",
+  etiqueta: "Cómo elegir los destacados",
+  pasos: [
+    {
+      titulo: "Marcá con la estrella",
+      texto: "Buscá el producto por código o abrí una categoría, y tocá la <b>estrella</b>. Lo que no está marcado se ve en gris.",
+      icono: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>'
+    },
+    {
+      titulo: "Ordenalos",
+      texto: "En <b>Tus destacados</b>, las flechas suben o bajan cada uno; la cruz lo saca. El primero es el que más se ve.",
+      icono: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20V4M4 8l4-4 4 4M16 4v16M12 16l4 4 4-4"/></svg>'
+    },
+    {
+      titulo: "Guardar",
+      texto: "Tocá <b>Guardar</b> abajo. La primera vez te pide la <b>llave</b>: pegala y no te la vuelve a pedir en este celular.",
+      icono: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>'
+    },
+    {
+      titulo: "Ya está en el catálogo",
+      texto: "En un minuto aparece para todos. Tocá <b>Ver cómo queda</b> arriba para verlo como lo ven los clientes.",
+      icono: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>'
+    }
+  ]
+};
+</script>
 <script src="assets/nebraska.js"></script>
+<script src="assets/tutorial.js"></script>
 <script>
 /* =====================================================================
    Panel para elegir los destacados desde el celular.
@@ -319,6 +350,10 @@ function pintarElegidos() {
         '<button class="ds-ico" type="button" data-m="1" aria-label="Bajar"' + (i === elegidos.length - 1 ? " disabled" : "") + ">" + ABAJO + "</button>" +
         '<button class="ds-ico quitar" type="button" data-q="1" aria-label="Quitar">' + CRUZ + "</button>" +
       "</div>";
+    fila.querySelector("img").addEventListener("error", function () {
+      this.style.visibility = "hidden";
+      fila.querySelector(".cat").textContent = "Sin ficha todavía";
+    });
     fila.querySelectorAll("[data-m]").forEach(function (b) {
       b.addEventListener("click", function () { mover(codigo, parseInt(b.dataset.m, 10)); });
     });

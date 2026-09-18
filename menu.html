@@ -102,6 +102,10 @@
         <small id="destacados-cant"></small>
       </h2>
       <a href="categoria.html?cat=destacados">Ver todos</a>
+      <div class="nb-flechas" id="destacados-flechas" hidden>
+        <button type="button" data-dir="-1" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" data-dir="1" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
     </div>
     <div class="nb-carrusel" id="destacados-lista"></div>
   </section>
@@ -135,6 +139,7 @@
 </main>
 
 <script src="assets/nebraska.js"></script>
+<script src="assets/tutorial.js"></script>
 <script>
 var FLECHA = '<span class="flecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>';
 
@@ -156,7 +161,118 @@ NB.manifest().then(function (data) {
   lista.forEach(function (p) { cont.appendChild(NB.tarjeta(p.codigo, p.cat)); });
   document.getElementById("destacados-cant").textContent = lista.length + (lista.length === 1 ? " producto" : " productos");
   document.getElementById("destacados").hidden = false;
+  carruselDestacados(cont);
 }).catch(function () {});
+
+/* ---------------------------------------------------------------------
+   El carrusel de destacados se mueve solo, despacio y sin fin, y tiene
+   flechas. Se frena mientras la persona lo toca y arranca de nuevo unos
+   segundos después. Si todas las fichas entran en pantalla, no hace
+   falta mover nada y las flechas se esconden.
+   --------------------------------------------------------------------- */
+function carruselDestacados(cont) {
+  var flechas = document.getElementById("destacados-flechas");
+  var VELOCIDAD = 22;        /* píxeles por segundo */
+  var PAUSA = 4000;          /* ms quieto después de que lo tocan */
+  var quietoHasta = 0;
+  var sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function originales() { return cont.querySelectorAll(".nb-prod:not([aria-hidden])"); }
+  function copias() { return cont.querySelectorAll('.nb-prod[aria-hidden="true"]'); }
+
+  /* Ancho que ocupan las fichas reales (sin las repetidas). */
+  function anchoOriginal() {
+    var o = originales();
+    if (!o.length) return 0;
+    var primera = o[0].getBoundingClientRect(), ultima = o[o.length - 1].getBoundingClientRect();
+    return ultima.right - primera.left;
+  }
+
+  /* Decide, según el ancho actual, si hay que mover. Si las fichas
+     entran todas en pantalla, no se mueve nada ni hay flechas. Si no,
+     se repiten una vez para que dé la vuelta sin salto: cuando el
+     scroll pasa la primera tanda se vuelve al principio. Se puede
+     llamar de nuevo al girar el celular. */
+  function preparar() {
+    var desborda = anchoOriginal() > cont.clientWidth + 4;
+    flechas.hidden = !desborda;
+    if (desborda && !copias().length) {
+      Array.prototype.slice.call(originales()).forEach(function (t) {
+        /* Se arma de nuevo en vez de clonar, para que la copia también
+           muestre "Ficha en preparación" si la imagen no existe. */
+        var copia = NB.tarjeta(t.dataset.codigo, t.dataset.cat);
+        copia.setAttribute("aria-hidden", "true");
+        copia.tabIndex = -1;
+        cont.appendChild(copia);
+      });
+    } else if (!desborda && copias().length) {
+      Array.prototype.slice.call(copias()).forEach(function (t) { t.remove(); });
+      cont.scrollLeft = 0;
+    }
+    pos = null;
+  }
+
+  /* Largo de una tanda: al pasarla, se vuelve al principio. */
+  function mitad() { return anchoOriginal() + 10; }
+
+  /* La posición se lleva aparte porque el navegador redondea scrollLeft
+     a píxeles enteros: sumarle una fracción por cuadro no lo movería.
+     Avanza según el tiempo real, así va a la misma velocidad en
+     cualquier celular. Si la persona lo arrastró a mano, se retoma de
+     donde lo dejó. */
+  var pos = null;
+  var ultimoTic = 0;
+  var asignado = -1;   /* lo último que puse yo en scrollLeft */
+
+  /* Si el scroll no coincide con lo que puse yo, lo movió la persona. */
+  cont.addEventListener("scroll", function () {
+    if (Math.abs(cont.scrollLeft - asignado) > 3) pos = null;
+  }, { passive: true });
+
+  var ultimaMedida = 0;
+
+  function tic(ahora) {
+    var dt = ultimoTic ? Math.min((ahora - ultimoTic) / 1000, 0.1) : 0;
+    ultimoTic = ahora;
+    /* Si la página se abrió en segundo plano, la primera medida dio 0.
+       Mientras no haya nada que mover, se vuelve a medir cada segundo. */
+    if (flechas.hidden && ahora - ultimaMedida > 1000) { ultimaMedida = ahora; preparar(); }
+    if (!flechas.hidden && !sinMovimiento && Date.now() > quietoHasta && document.visibilityState === "visible") {
+      if (pos === null) pos = cont.scrollLeft;
+      pos += VELOCIDAD * dt;
+      if (pos >= mitad()) pos -= mitad();
+      asignado = Math.round(pos);
+      cont.scrollLeft = pos;
+    } else {
+      pos = null;
+    }
+    requestAnimationFrame(tic);
+  }
+
+  function pausar() { quietoHasta = Date.now() + PAUSA; }
+
+  var paso = function () {
+    var t = cont.querySelector(".nb-prod");
+    return t ? t.getBoundingClientRect().width + 10 : 142;
+  };
+
+  flechas.querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      pausar();
+      cont.scrollBy({ left: paso() * parseInt(b.dataset.dir, 10), behavior: "smooth" });
+    });
+  });
+
+  ["pointerdown", "touchstart", "wheel", "mouseenter"].forEach(function (ev) {
+    cont.addEventListener(ev, pausar, { passive: true });
+  });
+  cont.addEventListener("mouseleave", function () { quietoHasta = Date.now() + 800; });
+  window.addEventListener("resize", preparar);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") preparar(); });
+
+  /* Se espera a que las imágenes den su ancho antes de decidir. */
+  requestAnimationFrame(function () { preparar(); requestAnimationFrame(tic); });
+}
 
 NB.manifest().then(function (data) {
   var cont = document.getElementById("categorias");
