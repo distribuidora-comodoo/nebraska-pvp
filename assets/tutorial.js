@@ -77,13 +77,13 @@
     {
       pagina: "inicio",
       titulo: "Destacados",
-      texto: "Arriba están los productos destacados de la semana. Tocá uno para ver su ficha y su precio.",
+      texto: "Arriba están los productos destacados. Tocá uno para ver su ficha y su precio.",
       icono: ICONO_ESTRELLA
     },
     {
       pagina: "inicio",
       titulo: "Ver catálogo completo (PDF)",
-      texto: "Abre todos los productos y precios en un solo documento.",
+      texto: "Descubrí todos los productos y sus características en un solo documento.",
       icono: ICONO_PDF
     },
     {
@@ -131,7 +131,15 @@
       icono: ICONO_VARIAS
     },
     pasoElegirRed("categoria"),
-    pasoPublicar("categoria")
+    pasoPublicar("categoria"),
+    {
+      pagina: "categoria",
+      titulo: "Descargar todo",
+      texto: esIOS
+        ? "Tocá <b>Todas: compartir o guardar</b> y después <b>Guardar imágenes</b>. Quedan en Fotos."
+        : "Tocá <b>Descargar todo</b> y toda la categoría queda en la galería. La primera vez, el celular pregunta si permite varias descargas: tocá <b>Permitir</b>.",
+      icono: ICONO_BAJAR
+    }
   ];
 
   /* Los pasos que salen solos en esta página. Sin página definida (o
