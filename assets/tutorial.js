@@ -1,8 +1,9 @@
 /* =====================================================================
    Nebraska — tutorial de uso
 
-   Un recorrido corto de cinco pasos: buscar, destacados, publicar en
-   estados y stories, descargar, y varias de una vez.
+   Un recorrido corto: en el inicio, buscar, destacados, los PDF y las
+   categorías; en la ficha y en la categoría, cómo compartir y publicar
+   en estados y stories, y cómo guardar la foto.
 
    - Aparece solo la primera vez que se entra al sitio en cada visita,
      hasta que la persona marca "No volver a mostrar".
@@ -34,19 +35,44 @@
   var esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-  var ICONO_QR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v7h-4M17 21h-3v-3"/></svg>';
   var ICONO_ESTRELLA = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
   var ICONO_COMPARTIR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>';
-  var ICONO_STORY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M9 7h6" stroke-linecap="round"/></svg>';
   var ICONO_BAJAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 11l6 6 6-6M4 20h16"/></svg>';
   var ICONO_VARIAS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><path d="M14 17.5l2.5 2.5 4.5-5" stroke-linecap="round"/></svg>';
 
+  var ICONO_BUSCAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+  var ICONO_PDF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>';
+  var ICONO_IMPRIMIR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>';
+  var ICONO_CATEGORIAS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
+  var ICONO_FORMATO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 12l3 3 7-7"/></svg>';
+  var ICONO_PUBLICAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>';
+
+  /* Estos dos pasos son iguales en la ficha y en la categoría. */
+  function pasoElegirRed(pagina) {
+    return {
+      pagina: pagina,
+      titulo: "Elegí dónde compartirla",
+      texto: (pagina === "ficha" ? "Tocá <b>Compartir</b>. " : "") +
+             "Se abre el menú de tu celular: tocá <b>WhatsApp</b> o <b>Instagram</b>.",
+      icono: ICONO_COMPARTIR
+    };
+  }
+  function pasoPublicar(pagina) {
+    return {
+      pagina: pagina,
+      titulo: "Publicá",
+      texto: "En Instagram elegí <b>Historia</b>. En WhatsApp, <b>Mi estado</b>. Y la publicás.",
+      icono: ICONO_PUBLICAR
+    };
+  }
+
   var PASOS = propio.pasos || [
+    /* ---- inicio ---- */
     {
       pagina: "inicio",
       titulo: "Buscá un producto",
-      texto: "Escaneá el QR que está pegado en el producto, o escribí su código en el buscador de arriba.",
-      icono: ICONO_QR
+      texto: "Escribí el código (SKU) del producto en el buscador de arriba.",
+      icono: ICONO_BUSCAR
     },
     {
       pagina: "inicio",
@@ -55,17 +81,33 @@
       icono: ICONO_ESTRELLA
     },
     {
-      pagina: "ficha",
-      titulo: "Compartir la ficha",
-      texto: "Tocá <b>Compartir</b>. Se abre el menú de tu celular: ahí elegís WhatsApp o Instagram.",
-      icono: ICONO_COMPARTIR
+      pagina: "inicio",
+      titulo: "Ver catálogo completo (PDF)",
+      texto: "Abre todos los productos y precios en un solo documento.",
+      icono: ICONO_PDF
     },
     {
-      pagina: "ficha",
-      titulo: "Subirla como estado o story",
-      texto: "En WhatsApp tocá <b>Mi estado</b>. En Instagram, <b>Historia</b>. Dejá <b>Para story</b> activado: así el precio no se corta.",
-      icono: ICONO_STORY
+      pagina: "inicio",
+      titulo: "Armar PDF para imprimir",
+      texto: "Elegí los productos que necesitás y descargá solo esas hojas de precio.",
+      icono: ICONO_IMPRIMIR
     },
+    {
+      pagina: "inicio",
+      titulo: "Entrá a una categoría",
+      texto: "Más abajo están las categorías. Tocá una para ver todos sus productos.",
+      icono: ICONO_CATEGORIAS
+    },
+
+    /* ---- ficha ---- */
+    {
+      pagina: "ficha",
+      titulo: "Marcá el formato",
+      texto: "Arriba de la foto, marcá <b>Para story</b> si la vas a subir a un estado o una historia, o <b>Ficha original</b> si la vas a mandar por chat.",
+      icono: ICONO_FORMATO
+    },
+    pasoElegirRed("ficha"),
+    pasoPublicar("ficha"),
     {
       pagina: "ficha",
       titulo: "Guardar la foto",
@@ -74,12 +116,22 @@
         : "Tocá <b>Descargar</b>. La foto queda en la galería, lista para subir.",
       icono: ICONO_BAJAR
     },
+
+    /* ---- categoría ---- */
     {
       pagina: "categoria",
-      titulo: "Varias de una vez",
-      texto: "<b>Elegir y compartir</b> marca varias fichas y las manda juntas. <b>Descargar todo</b> baja la categoría entera.",
+      titulo: "Marcá el formato",
+      texto: "Arriba de la grilla, marcá <b>Para story</b> si las vas a subir a un estado o una historia, o <b>Ficha original</b> si las vas a mandar por chat.",
+      icono: ICONO_FORMATO
+    },
+    {
+      pagina: "categoria",
+      titulo: "Elegí varias y compartilas",
+      texto: "Tocá <b>Elegir y compartir</b>, marcá las fichas que querés y tocá <b>Compartir</b>.",
       icono: ICONO_VARIAS
-    }
+    },
+    pasoElegirRed("categoria"),
+    pasoPublicar("categoria")
   ];
 
   /* Los pasos que salen solos en esta página. Sin página definida (o

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@1,800&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap">
 <!-- El ?v= obliga al celular a bajar la versión nueva: subilo cada vez que cambies el CSS o el JS -->
-<link rel="stylesheet" href="assets/nebraska.css?v=2">
+<link rel="stylesheet" href="assets/nebraska.css?v=3">
 <style>
   .nb-banner-pdf{
     display:flex;
@@ -139,9 +139,9 @@
   <p class="nb-pie">NEBRASKA · Precios sugeridos de venta</p>
 </main>
 
-<script src="assets/nebraska.js?v=2"></script>
+<script src="assets/nebraska.js?v=3"></script>
 <script>window.NB_TUTORIAL = { pagina: "inicio" };</script>
-<script src="assets/tutorial.js?v=2"></script>
+<script src="assets/tutorial.js?v=3"></script>
 <script>
 var FLECHA = '<span class="flecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>';
 
@@ -174,7 +174,7 @@ NB.manifest().then(function (data) {
    --------------------------------------------------------------------- */
 function carruselDestacados(cont) {
   var flechas = document.getElementById("destacados-flechas");
-  var VELOCIDAD = 22;        /* píxeles por segundo */
+  var VELOCIDAD = 30;        /* píxeles por segundo */
   var PAUSA = 4000;          /* ms quieto después de que lo tocan */
   var quietoHasta = 0;
   var sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
