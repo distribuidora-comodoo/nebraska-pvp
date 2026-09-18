@@ -12,53 +12,85 @@
    (menú, categoría, ficha) y molestaría que salte en cada toque. Se
    muestra una vez por sesión del navegador mientras no lo apaguen.
 
-   Una página puede traer su propio recorrido definiendo, antes de
-   cargar este archivo, window.NB_TUTORIAL = { clave, pasos }. Así el
-   panel de destacados tiene el suyo, con su propio "no volver a
-   mostrar", sin mezclarse con el del catálogo.
+   Cada paso pertenece a una página (inicio, ficha, categoría). Al
+   entrar a una página salen solos únicamente los pasos de esa página,
+   que es donde la persona los puede aplicar en el momento. El "?" de
+   arriba muestra el recorrido completo.
+
+   Cada página dice cuál es definiendo, antes de cargar este archivo,
+   window.NB_TUTORIAL = { pagina: "inicio" }. El panel de destacados
+   trae además sus propios pasos ({ clave, pasos }), con su propio "no
+   volver a mostrar", sin mezclarse con el del catálogo.
    ===================================================================== */
 (function (global) {
   "use strict";
 
   var propio = global.NB_TUTORIAL || {};
   var clave = propio.clave || "catalogo";
-  var LLAVE_OCULTAR = "nb_tutorial_ocultar_" + clave;   /* localStorage: "no volver a mostrar" */
-  var LLAVE_SESION = "nb_tutorial_visto_" + clave;      /* sessionStorage: ya salió en esta visita */
+  var pagina = propio.pagina || "";
+  var LLAVE_OCULTAR = "nb_tutorial_ocultar_" + clave;               /* localStorage: "no volver a mostrar" */
+  var LLAVE_SESION = "nb_tutorial_visto_" + clave + "_" + pagina;   /* sessionStorage: ya salió en esta visita */
 
   var esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
+  var ICONO_QR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v7h-4M17 21h-3v-3"/></svg>';
+  var ICONO_ESTRELLA = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
+  var ICONO_COMPARTIR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>';
+  var ICONO_STORY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M9 7h6" stroke-linecap="round"/></svg>';
+  var ICONO_BAJAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 11l6 6 6-6M4 20h16"/></svg>';
+  var ICONO_VARIAS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><path d="M14 17.5l2.5 2.5 4.5-5" stroke-linecap="round"/></svg>';
+
   var PASOS = propio.pasos || [
     {
-      titulo: "Buscá el producto",
-      texto: "Escaneá el QR que está en el producto, o escribí su código en el buscador de arriba. También podés entrar por categoría.",
-      icono: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v7h-4M17 21h-3v-3"/></svg>'
+      pagina: "inicio",
+      titulo: "Buscá un producto",
+      texto: "Escaneá el QR que está pegado en el producto, o escribí su código en el buscador de arriba.",
+      icono: ICONO_QR
     },
     {
-      titulo: "Los Destacados, primero",
-      texto: "Arriba de todo están los productos destacados de la semana. Se mueven solos; tocá uno para ver su ficha.",
-      icono: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>'
+      pagina: "inicio",
+      titulo: "Destacados",
+      texto: "Arriba están los productos destacados de la semana. Tocá uno para ver su ficha y su precio.",
+      icono: ICONO_ESTRELLA
     },
     {
-      titulo: "Publicar en estados y stories",
-      texto: "En la ficha, tocá <b>Compartir</b>. Elegí WhatsApp y <b>Mi estado</b>, o Instagram e <b>Historia</b>. Con <b>Para story</b> activado el precio no se corta.",
-      icono: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>'
+      pagina: "ficha",
+      titulo: "Compartir la ficha",
+      texto: "Tocá <b>Compartir</b>. Se abre el menú de tu celular: ahí elegís WhatsApp o Instagram.",
+      icono: ICONO_COMPARTIR
     },
     {
+      pagina: "ficha",
+      titulo: "Subirla como estado o story",
+      texto: "En WhatsApp tocá <b>Mi estado</b>. En Instagram, <b>Historia</b>. Dejá <b>Para story</b> activado: así el precio no se corta.",
+      icono: ICONO_STORY
+    },
+    {
+      pagina: "ficha",
       titulo: "Guardar la foto",
       texto: esIOS
-        ? "Tocá <b>Compartir o guardar foto</b> y elegí <b>Guardar imagen</b>. Queda en Fotos."
-        : "Tocá <b>Descargar</b> y la foto queda en la galería, lista para subir.",
-      icono: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 11l6 6 6-6M4 20h16"/></svg>'
+        ? "Tocá <b>Compartir o guardar foto</b> y después <b>Guardar imagen</b>. Queda en Fotos."
+        : "Tocá <b>Descargar</b>. La foto queda en la galería, lista para subir.",
+      icono: ICONO_BAJAR
     },
     {
+      pagina: "categoria",
       titulo: "Varias de una vez",
-      texto: "Dentro de una categoría, <b>Elegir y compartir</b> te deja marcar varias fichas y mandarlas juntas. <b>Descargar todo</b> baja la categoría entera.",
-      icono: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><path d="M14 17.5l2.5 2.5 4.5-5" stroke-linecap="round"/></svg>'
+      texto: "<b>Elegir y compartir</b> marca varias fichas y las manda juntas. <b>Descargar todo</b> baja la categoría entera.",
+      icono: ICONO_VARIAS
     }
   ];
 
+  /* Los pasos que salen solos en esta página. Sin página definida (o
+     con pasos propios sin página), salen todos. */
+  function pasosDeAca() {
+    var lista = PASOS.filter(function (p) { return !p.pagina || p.pagina === pagina; });
+    return lista.length ? lista : PASOS;
+  }
+
   var capa = null;
+  var activos = PASOS;   /* lo que se está mostrando: los de la página, o todos */
   var paso = 0;
   var ultimoFoco = null;
 
@@ -85,20 +117,11 @@
       "</div>";
     document.body.appendChild(capa);
 
-    var puntos = capa.querySelector(".nb-tuto-puntos");
-    PASOS.forEach(function (_, i) {
-      var b = document.createElement("button");
-      b.type = "button";
-      b.setAttribute("aria-label", "Paso " + (i + 1));
-      b.addEventListener("click", function () { ir(i); });
-      puntos.appendChild(b);
-    });
-
     capa.querySelector(".nb-tuto-cerrar").addEventListener("click", cerrar);
     capa.querySelectorAll("[data-ir]").forEach(function (b) {
       b.addEventListener("click", function () {
         var d = parseInt(b.dataset.ir, 10);
-        if (d > 0 && paso === PASOS.length - 1) return cerrar();
+        if (d > 0 && paso === activos.length - 1) return cerrar();
         ir(paso + d);
       });
     });
@@ -117,10 +140,24 @@
     });
   }
 
+  /* Un punto por paso de la lista activa. */
+  function armarPuntos() {
+    var puntos = capa.querySelector(".nb-tuto-puntos");
+    puntos.innerHTML = "";
+    activos.forEach(function (_, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-label", "Paso " + (i + 1));
+      b.addEventListener("click", function () { ir(i); });
+      puntos.appendChild(b);
+    });
+    puntos.hidden = activos.length < 2;
+  }
+
   function ir(n) {
-    if (n < 0 || n >= PASOS.length) return;
+    if (n < 0 || n >= activos.length) return;
     paso = n;
-    var p = PASOS[n];
+    var p = activos[n];
     capa.querySelector(".nb-tuto-icono").innerHTML = p.icono;
     capa.querySelector(".nb-tuto-titulo").textContent = p.titulo;
     capa.querySelector(".nb-tuto-texto").innerHTML = p.texto;
@@ -128,11 +165,15 @@
       b.setAttribute("aria-current", i === n ? "step" : "false");
     });
     capa.querySelector('[data-ir="-1"]').style.visibility = n === 0 ? "hidden" : "";
-    capa.querySelector('[data-ir="1"]').textContent = n === PASOS.length - 1 ? "Entendido" : "Siguiente";
+    capa.querySelector('[data-ir="1"]').textContent = n === activos.length - 1 ? "Entendido" : "Siguiente";
   }
 
-  function abrir() {
+  /* abrir(true) muestra el recorrido completo (desde el "?");
+     abrir() sólo los pasos de esta página. */
+  function abrir(todos) {
     if (!capa) armar();
+    activos = todos === true ? PASOS : pasosDeAca();
+    armarPuntos();
     ultimoFoco = document.activeElement;
     capa.querySelector(".nb-tuto-check input").checked = ocultarSiempre();
     ir(0);
@@ -158,7 +199,7 @@
     b.setAttribute("aria-label", propio.etiqueta || "Cómo usar el catálogo");
     b.title = propio.etiqueta || "Cómo usar el catálogo";
     b.textContent = "?";
-    b.addEventListener("click", abrir);
+    b.addEventListener("click", function () { abrir(true); });
     var existente = bar.querySelector(".nb-btn");
     if (existente) bar.insertBefore(b, existente); else bar.appendChild(b);
   }
@@ -171,7 +212,7 @@
       sessionStorage.setItem(LLAVE_SESION, "1");
     } catch (e) {}
     /* Un respiro para que la página termine de pintar antes del cartel. */
-    setTimeout(abrir, 600);
+    setTimeout(function () { abrir(false); }, 600);
   }
 
   global.NBTutorial = { abrir: abrir, cerrar: cerrar };
