@@ -92,6 +92,20 @@
   <h1 class="nb-titulo">Catálogo Nebraska</h1>
   <p class="nb-sub" id="subtitulo">Elegí una categoría o buscá el producto por su código.</p>
 
+  <!-- Destacados: los elige el jefe desde destacados.html. Se muestra
+       sólo si hay alguno. -->
+  <section class="nb-destacados" id="destacados" hidden>
+    <div class="nb-sec-head">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>
+        Destacados
+        <small id="destacados-cant"></small>
+      </h2>
+      <a href="categoria.html?cat=destacados">Ver todos</a>
+    </div>
+    <div class="nb-carrusel" id="destacados-lista"></div>
+  </section>
+
   <a class="nb-banner-pdf" href="https://drive.google.com/file/d/1a0Gi2UGH8Bv5koPII8cMGI0ezpHFYTLi/view" target="_blank" rel="noopener">
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     <span class="txt">Ver catálogo completo (PDF)<small>Todos los productos y precios en un solo documento</small></span>
@@ -132,6 +146,17 @@ var FLECHA = '<span class="flecha"><svg viewBox="0 0 24 24" fill="none" stroke="
   vistos.forEach(function (p) { lista.appendChild(NB.tarjeta(p.codigo, p.cat)); });
   document.getElementById("vistos").hidden = false;
 })();
+
+/* Destacados, primero de todo. */
+NB.manifest().then(function (data) {
+  return NB.destacados(data);
+}).then(function (lista) {
+  if (!lista.length) return;
+  var cont = document.getElementById("destacados-lista");
+  lista.forEach(function (p) { cont.appendChild(NB.tarjeta(p.codigo, p.cat)); });
+  document.getElementById("destacados-cant").textContent = lista.length + (lista.length === 1 ? " producto" : " productos");
+  document.getElementById("destacados").hidden = false;
+}).catch(function () {});
 
 NB.manifest().then(function (data) {
   var cont = document.getElementById("categorias");

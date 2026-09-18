@@ -205,10 +205,12 @@ function barraCompartir(img) {
       '<button type="button" data-f="story">' + ICONO_STORY + "Para story</button>" +
       '<button type="button" data-f="original">' + ICONO_FICHA + "Ficha original</button>" +
     "</div>" +
+    /* En iPhone los dos botones abrirían el mismo menú: va uno solo. */
     '<div class="nb-share-botones">' +
-      '<button class="nb-btn" type="button" data-accion="compartir">' + ICONO_COMPARTIR + "Compartir</button>" +
-      '<button class="nb-btn nb-btn--claro" type="button" data-accion="guardar">' + ICONO_BAJAR +
-        (C.esIOS ? "Guardar en Fotos" : "Descargar") + "</button>" +
+      (C.esIOS
+        ? '<button class="nb-btn" type="button" data-accion="compartir">' + ICONO_COMPARTIR + "Compartir o guardar foto</button>"
+        : '<button class="nb-btn" type="button" data-accion="compartir">' + ICONO_COMPARTIR + "Compartir</button>" +
+          '<button class="nb-btn nb-btn--claro" type="button" data-accion="guardar">' + ICONO_BAJAR + "Descargar</button>") +
     "</div>" +
     '<p class="nb-share-nota"></p>';
 

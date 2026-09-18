@@ -23,7 +23,7 @@
      y la de abajo (responder). La ficha se mantiene fuera de esas zonas. */
   var STORY_MARGEN_VERTICAL = 260;
   var STORY_MARGEN_LADO = 64;
-  var STORY_FRANJA = 24;
+  var STORY_FRANJA = 36;
 
   var LLAVE_FORMATO = "nb_formato";
 
@@ -133,6 +133,25 @@
     return cache[url];
   }
 
+  /* Prepara varias fichas, de a una, avisando el avance. Devuelve sólo
+     las que salieron bien: una ficha que no cargó no frena al resto. */
+  function prepararVarios(lista, formatoElegido, avance) {
+    var archivos = [];
+    var i = 0;
+    function siguiente() {
+      if (i >= lista.length) return Promise.resolve(archivos);
+      var p = lista[i++];
+      return preparar(p.url, p.codigo)
+        .then(function (a) { archivos.push(a[formatoElegido]); })
+        .catch(function () {})
+        .then(function () {
+          if (avance) avance(i, lista.length);
+          return new Promise(function (r) { setTimeout(function () { r(siguiente()); }, 0); });
+        });
+    }
+    return siguiente();
+  }
+
   function puedeCompartir(archivos) {
     try {
       return !!(navigator.share && navigator.canShare && navigator.canShare({ files: archivos }));
@@ -159,20 +178,31 @@
         .then(function () { return "compartido"; })
         .catch(function (e) {
           if (e && e.name === "AbortError") return "cancelado";
-          archivos.forEach(descargar);
-          return "descargado";
+          return descargarVarios(archivos);
         });
     }
-    archivos.forEach(descargar);
-    return Promise.resolve("descargado");
+    return descargarVarios(archivos);
+  }
+
+  /* Varias descargas seguidas: con una pausa entre cada una, porque si
+     salen todas juntas el navegador se traga algunas. La primera vez
+     Chrome pregunta si permite descargar varios archivos. */
+  function descargarVarios(archivos) {
+    return new Promise(function (ok) {
+      var i = 0;
+      (function una() {
+        if (i >= archivos.length) return ok("descargado");
+        descargar(archivos[i++]);
+        setTimeout(una, 350);
+      })();
+    });
   }
 
   /* "Descargar" hace lo que cada teléfono permite: en Android baja a la
      galería; en iPhone abre el menú para tocar "Guardar imagen". */
   function guardar(archivos, titulo) {
     if (esIOS && puedeCompartir(archivos)) return compartir(archivos, titulo);
-    archivos.forEach(descargar);
-    return Promise.resolve("descargado");
+    return descargarVarios(archivos);
   }
 
   global.NBCompartir = {
@@ -180,6 +210,7 @@
     formato: formato,
     guardarFormato: guardarFormato,
     preparar: preparar,
+    prepararVarios: prepararVarios,
     compartir: compartir,
     guardar: guardar,
     puedeCompartir: puedeCompartir

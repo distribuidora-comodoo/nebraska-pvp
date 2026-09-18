@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1d1d1d">
+<meta name="robots" content="noindex, nofollow">
+<title>Elegir destacados — Nebraska</title>
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@1,800&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&display=swap">
+<link rel="stylesheet" href="assets/nebraska.css">
+<style>
+  body.editando{ padding-bottom:96px; }
+
+  /* ---- tarjeta genérica de esta página ---- */
+  .ds-caja{
+    background:#fff; border:1px solid var(--linea); border-radius:var(--radio);
+    box-shadow:var(--sombra); padding:14px; margin-bottom:14px;
+  }
+  .ds-rotulo{
+    display:block; font-size:11.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--suave); margin-bottom:6px;
+  }
+  .ds-nota{ font-size:12.5px; color:var(--suave); line-height:1.5; }
+  .ds-nota b{ color:var(--negro); }
+  .ds-error{ color:#b3261e; }
+  .ds-ok{ color:#1c6440; }
+
+  /* ---- llave ---- */
+  .ds-llave input{
+    width:100%; height:42px; padding:0 12px; border:1.5px solid #dcdce1; border-radius:10px;
+    font-family:ui-monospace, monospace; font-size:13px; margin-bottom:8px;
+  }
+  .ds-llave input:focus{ outline:0; border-color:var(--naranja); }
+  .ds-llave .fila{ display:flex; gap:8px; }
+  .ds-llave .fila .nb-btn{ flex:1; }
+
+  /* ---- tus destacados (arriba, con orden) ---- */
+  .ds-elegidos-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .ds-elegidos-head h2{ font-size:17px; font-weight:800; display:flex; align-items:center; gap:7px; }
+  .ds-elegidos-head h2 svg{ width:18px; height:18px; color:var(--naranja); }
+  .ds-elegidos-head .cant{ margin-left:auto; font-size:12px; font-weight:700; color:var(--suave); background:#f2f2f3; border-radius:99px; padding:4px 10px; }
+  .ds-vacio{ font-size:13.5px; color:var(--suave); padding:8px 2px; }
+
+  .ds-fila{
+    display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f0f0f2;
+  }
+  .ds-fila:last-child{ border-bottom:0; }
+  .ds-fila .pos{ width:22px; font-size:12px; font-weight:800; color:var(--suave); text-align:right; flex:0 0 auto; }
+  .ds-fila img{ width:44px; height:58px; object-fit:contain; background:#fff; border:1px solid var(--linea); border-radius:6px; flex:0 0 auto; }
+  .ds-fila .datos{ flex:1; min-width:0; }
+  .ds-fila .cod{ font-size:14px; font-weight:800; letter-spacing:.02em; }
+  .ds-fila .cat{ font-size:11.5px; color:var(--suave); }
+  .ds-fila .mover{ display:flex; gap:4px; flex:0 0 auto; }
+  .ds-ico{
+    width:36px; height:36px; border-radius:9px; border:1.5px solid #dcdce1; background:#fff;
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color:var(--negro);
+  }
+  .ds-ico svg{ width:16px; height:16px; }
+  .ds-ico:disabled{ opacity:.3; cursor:default; }
+  .ds-ico.quitar{ color:#b3261e; border-color:#f1d5d3; }
+
+  /* ---- buscador y vista ---- */
+  .ds-herr{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+  .ds-buscar{ flex:1 1 220px; }
+  .ds-buscar .campo{
+    display:flex; align-items:center; gap:9px; height:44px; padding:0 12px;
+    border:1.5px solid #dcdce1; border-radius:10px;
+  }
+  .ds-buscar .campo:focus-within{ border-color:var(--naranja); }
+  .ds-buscar .campo svg{ width:17px; height:17px; color:var(--suave); flex:0 0 auto; }
+  .ds-buscar input{ flex:1; min-width:0; border:0; outline:0; font-family:inherit; font-size:15px; font-weight:600; letter-spacing:.02em; background:transparent; }
+  .ds-buscar input::-webkit-search-cancel-button{ display:none; }
+  .ds-vista{ flex:0 0 auto; }
+  .ds-vista-grupo{ display:flex; gap:4px; background:#ececf0; padding:4px; border-radius:11px; }
+  .ds-vista-grupo button{
+    display:inline-flex; align-items:center; gap:6px; background:transparent; border:0; border-radius:8px;
+    cursor:pointer; font-family:inherit; font-size:13px; font-weight:700; color:var(--suave); padding:8px 12px;
+  }
+  .ds-vista-grupo button svg{ width:15px; height:15px; }
+  .ds-vista-grupo button[aria-pressed="true"]{ background:#fff; color:var(--negro); box-shadow:0 1px 2px rgba(0,0,0,.08); }
+  .ds-hallazgos{ margin-top:10px; }
+  .ds-hallazgos:empty{ display:none; }
+
+  /* ---- categorías desplegables ---- */
+  .ds-cat{ background:#fff; border:1px solid var(--linea); border-radius:var(--radio); box-shadow:var(--sombra); margin-bottom:10px; overflow:hidden; }
+  .ds-cat-abrir{
+    width:100%; display:flex; align-items:center; gap:10px; background:transparent; border:0; cursor:pointer;
+    text-align:left; font-family:inherit; padding:15px 14px; color:inherit;
+  }
+  .ds-cat-abrir:hover{ background:#faf7f5; }
+  .ds-cat-abrir .flecha{ width:18px; height:18px; color:var(--naranja); transition:transform .18s ease; flex:0 0 auto; }
+  .ds-cat[data-abierta="1"] .flecha{ transform:rotate(90deg); }
+  .ds-cat-abrir .nombre{ font-size:15px; font-weight:800; }
+  .ds-cat-abrir .cant{ margin-left:auto; font-size:11.5px; font-weight:700; color:var(--suave); background:#f2f2f3; border-radius:99px; padding:4px 10px; flex:0 0 auto; }
+  .ds-cat-abrir .cant b{ color:var(--naranja-osc); }
+  .ds-cat-cuerpo{ padding:0 14px 14px; }
+
+  /* ---- las fichas: lista o cuadritos. No destacada = gris. ---- */
+  .ds-hoja{ cursor:pointer; user-select:none; -webkit-user-select:none; }
+  .ds-hoja:not(.on) img{ filter:grayscale(1); opacity:.55; }
+  .ds-hoja:not(.on) .cod{ color:var(--suave); }
+  .ds-hoja.sinficha{ cursor:default; }
+  .ds-hoja.sinficha .cod{ color:#b3b3b9; }
+  .ds-estrella{
+    width:30px; height:30px; border-radius:50%; flex:0 0 auto;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:#f2f2f3; color:#c5c5cb;
+  }
+  .ds-estrella svg{ width:17px; height:17px; }
+  .ds-hoja.on .ds-estrella{ background:var(--naranja); color:#fff; }
+
+  .ds-rama.lista .ds-hoja{ display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid #f4f4f6; }
+  .ds-rama.lista .ds-hoja:last-child{ border-bottom:0; }
+  .ds-rama.lista .ds-hoja img{ width:44px; height:58px; object-fit:contain; border:1px solid var(--linea); border-radius:6px; background:#fff; flex:0 0 auto; }
+  .ds-rama.lista .ds-hoja .datos{ flex:1; min-width:0; }
+  .ds-rama.lista .ds-hoja .cod{ font-size:14px; font-weight:800; letter-spacing:.02em; }
+  .ds-rama.lista .ds-hoja .cat{ font-size:11.5px; color:var(--suave); }
+
+  .ds-rama.cuadros{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; padding-top:4px; }
+  @media(min-width:560px){ .ds-rama.cuadros{ grid-template-columns:repeat(4, 1fr); } }
+  @media(min-width:820px){ .ds-rama.cuadros{ grid-template-columns:repeat(6, 1fr); } }
+  .ds-rama.cuadros .ds-hoja{ position:relative; border:1px solid var(--linea); border-radius:10px; padding:8px; text-align:center; background:#fff; }
+  .ds-rama.cuadros .ds-hoja.on{ border-color:var(--naranja); }
+  .ds-rama.cuadros .ds-hoja img{ width:100%; aspect-ratio:3/4; object-fit:contain; display:block; }
+  .ds-rama.cuadros .ds-hoja .cod{ font-size:10.5px; font-weight:800; margin-top:6px; word-break:break-all; }
+  .ds-rama.cuadros .ds-hoja .cat{ display:none; }
+  .ds-rama.cuadros .ds-estrella{ position:absolute; top:6px; right:6px; width:26px; height:26px; }
+  .ds-rama.cuadros .ds-estrella svg{ width:14px; height:14px; }
+
+  /* ---- barra fija de guardar ---- */
+  .ds-guardar{
+    position:fixed; left:0; right:0; bottom:0; z-index:60; background:var(--negro); color:#fff;
+    padding:12px 14px calc(12px + env(safe-area-inset-bottom)); box-shadow:0 -6px 24px rgba(0,0,0,.25);
+  }
+  .ds-guardar-in{ max-width:940px; margin:0 auto; display:flex; align-items:center; gap:10px; }
+  .ds-guardar .estado{ flex:1; font-size:13.5px; font-weight:600; }
+  .ds-guardar .estado small{ display:block; font-weight:500; font-size:12px; color:#bdbdbd; }
+  .ds-guardar .nb-btn[disabled]{ opacity:.5; cursor:default; }
+</style>
+</head>
+<body class="editando">
+
+<header class="nb-header">
+  <div class="nb-bar">
+    <a class="nb-logo" href="menu.html"><i></i><span>NEBRASKA</span></a>
+    <span class="nb-spacer"></span>
+    <a class="nb-btn nb-btn--claro" href="categoria.html?cat=destacados">Ver cómo queda</a>
+  </div>
+</header>
+
+<main class="nb-wrap">
+  <h1 class="nb-titulo">Elegir destacados</h1>
+  <p class="nb-sub">Tocá la estrella de los productos que querés en la sección Destacados del catálogo. Cuando termines, Guardar.</p>
+
+  <!-- Llave de GitHub: se pide sólo cuando hace falta guardar -->
+  <div class="ds-caja ds-llave" id="llave" hidden>
+    <span class="ds-rotulo">Llave para guardar</span>
+    <input id="llave-input" type="password" autocomplete="off" spellcheck="false" placeholder="Pegá acá la llave que te pasaron">
+    <div class="fila">
+      <button class="nb-btn" type="button" id="llave-guardar">Guardar llave</button>
+      <button class="nb-btn nb-btn--claro" type="button" id="llave-cancelar">Cancelar</button>
+    </div>
+    <p class="ds-nota" style="margin-top:8px">Se guarda en este celular y no se vuelve a pedir. Si la perdés, pedí otra.</p>
+  </div>
+
+  <!-- Tus destacados, en orden -->
+  <div class="ds-caja">
+    <div class="ds-elegidos-head">
+      <h2><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>Tus destacados</h2>
+      <span class="cant" id="elegidos-cant">0</span>
+    </div>
+    <div id="elegidos"><div class="ds-vacio">Todavía no elegiste ninguno. Buscá abajo por código o abrí una categoría.</div></div>
+  </div>
+
+  <!-- Buscador y vista -->
+  <div class="ds-caja">
+    <div class="ds-herr">
+      <div class="ds-buscar">
+        <span class="ds-rotulo">Buscar por código</span>
+        <div class="campo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="q" type="search" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ej: NOPTP20">
+        </div>
+      </div>
+      <div class="ds-vista">
+        <span class="ds-rotulo">Vista</span>
+        <div class="ds-vista-grupo" role="group">
+          <button type="button" id="vista-lista" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>Lista</button>
+          <button type="button" id="vista-cuadros" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>Cuadritos</button>
+        </div>
+      </div>
+    </div>
+    <div class="ds-hallazgos ds-rama lista" id="hallazgos"></div>
+  </div>
+
+  <div id="cats"></div>
+
+  <p class="nb-pie">NEBRASKA · Herramienta interna</p>
+</main>
+
+<div class="ds-guardar">
+  <div class="ds-guardar-in">
+    <div class="estado"><span id="estado">Cargando…</span><small id="estado-nota"></small></div>
+    <button class="nb-btn" type="button" id="guardar" disabled>Guardar</button>
+  </div>
+</div>
+
+<script src="assets/nebraska.js"></script>
+<script>
+/* =====================================================================
+   Panel para elegir los destacados desde el celular.
+
+   Lo que se marca acá se guarda en fichas/destacados.json del
+   repositorio, usando la API de GitHub con una llave que se pega una
+   sola vez. GitHub Pages lo publica en un minuto y aparece en el menú.
+   ===================================================================== */
+var REPO = "distribuidora-comodoo/nebraska-pvp";
+var RAMA = "main";
+var ARCHIVO = "fichas/destacados.json";
+var API = "https://api.github.com/repos/" + REPO + "/contents/" + ARCHIVO;
+var LLAVE_TOKEN = "nb_llave_destacados";
+var LLAVE_VISTA = "nb_destacados_vista";
+
+var datos = null;          /* manifest */
+var indice = [];           /* [{codigo, cat, catNombre, key}] */
+var elegidos = [];         /* códigos, en orden */
+var guardados = "[]";      /* lo último guardado, para saber si hay cambios */
+var shaCargado = null;     /* versión del archivo en GitHub al cargar */
+var vista = localStorage.getItem(LLAVE_VISTA) === "cuadros" ? "cuadros" : "lista";
+
+var $elegidos = document.getElementById("elegidos");
+var $cats = document.getElementById("cats");
+var $q = document.getElementById("q");
+var $hallazgos = document.getElementById("hallazgos");
+var $estado = document.getElementById("estado");
+var $estadoNota = document.getElementById("estado-nota");
+var $guardar = document.getElementById("guardar");
+var $llave = document.getElementById("llave");
+
+var ESTRELLA = '<span class="ds-estrella"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg></span>';
+var FLECHA = '<svg class="flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
+var ARRIBA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+var ABAJO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
+var CRUZ = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+function llave() { return localStorage.getItem(LLAVE_TOKEN) || ""; }
+function porCodigo(codigo) {
+  for (var i = 0; i < indice.length; i++) if (indice[i].codigo === codigo) return indice[i];
+  return null;
+}
+function hayCambios() { return JSON.stringify(elegidos) !== guardados; }
+
+/* ---------------------------- leer de GitHub ------------------------- */
+function cabeceras() {
+  var h = { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+  if (llave()) h["Authorization"] = "Bearer " + llave();
+  return h;
+}
+
+/* Trae el archivo y su "sha" (la versión). Sin llave también funciona
+   porque el repo es público, sólo que con menos consultas por hora. */
+function leerDeGitHub() {
+  return fetch(API + "?ref=" + RAMA + "&t=" + Date.now(), { headers: cabeceras() }).then(function (r) {
+    if (r.status === 404) return { sha: null, productos: [] };
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json().then(function (j) {
+      var texto = decodeURIComponent(escape(atob(j.content.replace(/\n/g, ""))));
+      var d = {};
+      try { d = JSON.parse(texto); } catch (e) {}
+      return { sha: j.sha, productos: d.productos || [] };
+    });
+  });
+}
+
+/* ------------------------------- arranque ---------------------------- */
+NB.manifest().then(function (data) {
+  datos = data;
+  indice = NB.indice(data);
+
+  /* Si GitHub no responde (sin internet, tope de consultas), se lee la
+     copia publicada del sitio: alcanza para mirar, no para guardar. */
+  return leerDeGitHub().catch(function () {
+    return NB.destacados(data).then(function (l) { return { sha: null, productos: l.map(function (p) { return p.codigo; }) }; });
+  });
+}).then(function (d) {
+  shaCargado = d.sha;
+  elegidos = d.productos.filter(function (c) { return !!porCodigo(c); });
+  guardados = JSON.stringify(elegidos);
+  cambiarVista(vista);
+  pintarElegidos();
+  armarCategorias();
+  pintarEstado();
+}).catch(function () {
+  $estado.textContent = "No se pudo cargar el catálogo.";
+  $cats.innerHTML = '<div class="nb-estado"><strong>No se pudo leer el catálogo</strong>Revisá la conexión y recargá.</div>';
+});
+
+/* ---------------------------- tus destacados ------------------------- */
+function pintarElegidos() {
+  document.getElementById("elegidos-cant").textContent = elegidos.length;
+  if (!elegidos.length) {
+    $elegidos.innerHTML = '<div class="ds-vacio">Todavía no elegiste ninguno. Buscá abajo por código o abrí una categoría.</div>';
+    return;
+  }
+  $elegidos.innerHTML = "";
+  elegidos.forEach(function (codigo, i) {
+    var p = porCodigo(codigo);
+    var fila = document.createElement("div");
+    fila.className = "ds-fila";
+    fila.innerHTML =
+      '<span class="pos">' + (i + 1) + "</span>" +
+      '<img loading="lazy" alt="" src="' + NB.imgFicha(codigo, p.cat) + '">' +
+      '<div class="datos"><div class="cod">' + NB.escapar(codigo) + '</div><div class="cat">' + NB.escapar(p.catNombre) + "</div></div>" +
+      '<div class="mover">' +
+        '<button class="ds-ico" type="button" data-m="-1" aria-label="Subir"' + (i === 0 ? " disabled" : "") + ">" + ARRIBA + "</button>" +
+        '<button class="ds-ico" type="button" data-m="1" aria-label="Bajar"' + (i === elegidos.length - 1 ? " disabled" : "") + ">" + ABAJO + "</button>" +
+        '<button class="ds-ico quitar" type="button" data-q="1" aria-label="Quitar">' + CRUZ + "</button>" +
+      "</div>";
+    fila.querySelectorAll("[data-m]").forEach(function (b) {
+      b.addEventListener("click", function () { mover(codigo, parseInt(b.dataset.m, 10)); });
+    });
+    fila.querySelector("[data-q]").addEventListener("click", function () { alternar(codigo); });
+    $elegidos.appendChild(fila);
+  });
+}
+
+function mover(codigo, paso) {
+  var i = elegidos.indexOf(codigo);
+  var j = i + paso;
+  if (i < 0 || j < 0 || j >= elegidos.length) return;
+  elegidos.splice(i, 1);
+  elegidos.splice(j, 0, codigo);
+  pintarElegidos();
+  pintarEstado();
+}
+
+/* Marca o desmarca un producto, y actualiza todo lo que lo muestra. */
+function alternar(codigo) {
+  var i = elegidos.indexOf(codigo);
+  if (i >= 0) elegidos.splice(i, 1); else elegidos.push(codigo);
+  pintarElegidos();
+  document.querySelectorAll('.ds-hoja[data-codigo="' + codigo + '"]').forEach(function (h) {
+    h.classList.toggle("on", i < 0);
+  });
+  document.querySelectorAll(".ds-cat").forEach(pintarCantidad);
+  pintarEstado();
+}
+
+/* ------------------------------ categorías --------------------------- */
+function armarCategorias() {
+  $cats.innerHTML = "";
+  Object.keys(datos.categorias).forEach(function (cat) {
+    var info = datos.categorias[cat];
+    var sec = document.createElement("section");
+    sec.className = "ds-cat";
+    sec.dataset.cat = cat;
+    sec.dataset.abierta = "0";
+    sec.innerHTML =
+      '<button class="ds-cat-abrir" type="button" aria-expanded="false">' + FLECHA +
+        '<span class="nombre">' + NB.escapar(info.nombre) + "</span>" +
+        '<span class="cant"></span>' +
+      "</button>" +
+      '<div class="ds-cat-cuerpo" hidden><div class="ds-rama ' + vista + '"></div></div>';
+    pintarCantidad(sec);
+    var abrir = sec.querySelector(".ds-cat-abrir");
+    var cuerpo = sec.querySelector(".ds-cat-cuerpo");
+    abrir.addEventListener("click", function () {
+      var abierta = sec.dataset.abierta === "1";
+      sec.dataset.abierta = abierta ? "0" : "1";
+      abrir.setAttribute("aria-expanded", String(!abierta));
+      cuerpo.hidden = abierta;
+      if (!abierta) pintarRama(sec);
+    });
+    $cats.appendChild(sec);
+  });
+}
+
+function pintarCantidad(sec) {
+  var info = datos.categorias[sec.dataset.cat];
+  var n = info.productos.filter(function (c) { return elegidos.indexOf(c) >= 0; }).length;
+  sec.querySelector(".cant").innerHTML = (n ? "<b>" + n + " ★</b> · " : "") + info.productos.length;
+}
+
+/* Una ficha (fila o cuadrito). Tocarla la marca o desmarca. */
+function hoja(p) {
+  var h = document.createElement("div");
+  h.className = "ds-hoja" + (elegidos.indexOf(p.codigo) >= 0 ? " on" : "");
+  h.dataset.codigo = p.codigo;
+  h.innerHTML =
+    '<img loading="lazy" alt="" src="' + NB.imgFicha(p.codigo, p.cat) + '">' +
+    '<div class="datos"><div class="cod">' + NB.escapar(p.codigo) + '</div><div class="cat">' + NB.escapar(p.catNombre) + "</div></div>" +
+    ESTRELLA;
+  h.querySelector("img").addEventListener("error", function () {
+    h.classList.add("sinficha");
+    h.querySelector(".cat").textContent = "Sin ficha todavía";
+  });
+  h.addEventListener("click", function () {
+    if (h.classList.contains("sinficha")) return;
+    alternar(p.codigo);
+  });
+  return h;
+}
+
+function pintarRama(sec) {
+  var rama = sec.querySelector(".ds-rama");
+  rama.className = "ds-rama " + vista;
+  rama.innerHTML = "";
+  datos.categorias[sec.dataset.cat].productos.forEach(function (codigo) {
+    rama.appendChild(hoja(porCodigo(codigo)));
+  });
+}
+
+function cambiarVista(nueva) {
+  vista = nueva;
+  localStorage.setItem(LLAVE_VISTA, nueva);
+  document.getElementById("vista-lista").setAttribute("aria-pressed", String(nueva === "lista"));
+  document.getElementById("vista-cuadros").setAttribute("aria-pressed", String(nueva === "cuadros"));
+  $hallazgos.className = "ds-hallazgos ds-rama " + nueva;
+  document.querySelectorAll(".ds-cat").forEach(function (sec) {
+    if (sec.dataset.abierta === "1") pintarRama(sec);
+    else sec.querySelector(".ds-rama").className = "ds-rama " + nueva;
+  });
+}
+document.getElementById("vista-lista").addEventListener("click", function () { cambiarVista("lista"); });
+document.getElementById("vista-cuadros").addEventListener("click", function () { cambiarVista("cuadros"); });
+
+/* ------------------------------- buscador ---------------------------- */
+$q.addEventListener("input", function () {
+  var q = $q.value.trim();
+  $hallazgos.innerHTML = "";
+  if (!q) return;
+  var k = q.toUpperCase().normalize("NFD").replace(/[^A-Z0-9]/g, "");
+  var empieza = [], contiene = [];
+  indice.forEach(function (it) {
+    var i = it.key.indexOf(k);
+    if (i === 0) empieza.push(it); else if (i > 0) contiene.push(it);
+  });
+  var res = empieza.concat(contiene).slice(0, 12);
+  if (!res.length) { $hallazgos.innerHTML = '<div class="ds-vacio">Ningún producto con “' + NB.escapar(q) + "”.</div>"; return; }
+  res.forEach(function (p) { $hallazgos.appendChild(hoja(p)); });
+});
+
+/* ------------------------------- guardar ----------------------------- */
+function pintarEstado(msg, clase) {
+  if (msg) {
+    $estado.textContent = msg;
+    $estado.className = clase || "";
+    $estadoNota.textContent = "";
+    return;
+  }
+  $estado.className = "";
+  if (hayCambios()) {
+    $estado.textContent = "Hay cambios sin guardar";
+    $estadoNota.textContent = elegidos.length + " destacados";
+    $guardar.disabled = false;
+  } else {
+    $estado.textContent = "Todo guardado";
+    $estadoNota.textContent = elegidos.length + " destacados en el catálogo";
+    $guardar.disabled = true;
+  }
+}
+
+function pedirLlave() {
+  $llave.hidden = false;
+  document.getElementById("llave-input").focus();
+  $llave.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+document.getElementById("llave-guardar").addEventListener("click", function () {
+  var v = document.getElementById("llave-input").value.trim();
+  if (!v) return;
+  localStorage.setItem(LLAVE_TOKEN, v);
+  document.getElementById("llave-input").value = "";
+  $llave.hidden = true;
+  guardar();
+});
+document.getElementById("llave-cancelar").addEventListener("click", function () { $llave.hidden = true; });
+
+function guardar() {
+  if (!llave()) return pedirLlave();
+  $guardar.disabled = true;
+  pintarEstado("Guardando…");
+
+  /* Se vuelve a leer la versión actual: si alguien guardó mientras
+     tanto, se avisa en vez de pisarle los cambios. */
+  leerDeGitHub().then(function (actual) {
+    if (shaCargado && actual.sha && actual.sha !== shaCargado) {
+      throw { tipo: "conflicto" };
+    }
+    var hoy = new Date().toISOString().slice(0, 10);
+    var texto = JSON.stringify({ productos: elegidos, actualizado: hoy }, null, 2) + "\n";
+    var cuerpo = {
+      message: "Destacados: " + elegidos.length + " productos",
+      content: btoa(unescape(encodeURIComponent(texto))),
+      branch: RAMA
+    };
+    if (actual.sha) cuerpo.sha = actual.sha;
+    return fetch(API, { method: "PUT", headers: cabeceras(), body: JSON.stringify(cuerpo) });
+  }).then(function (r) {
+    if (r.status === 401) throw { tipo: "llave" };
+    if (r.status === 403) throw { tipo: "permiso" };
+    if (r.status === 409 || r.status === 422) throw { tipo: "conflicto" };
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function (j) {
+    shaCargado = j.content && j.content.sha;
+    guardados = JSON.stringify(elegidos);
+    pintarEstado("Guardado. En un minuto está en el catálogo.", "ds-ok");
+    setTimeout(pintarEstado, 6000);
+  }).catch(function (e) {
+    $guardar.disabled = false;
+    if (e && e.tipo === "llave") {
+      localStorage.removeItem(LLAVE_TOKEN);
+      pintarEstado("La llave no sirve. Pegá una nueva.", "ds-error");
+      pedirLlave();
+    } else if (e && e.tipo === "permiso") {
+      pintarEstado("Esta llave no tiene permiso para escribir en el catálogo.", "ds-error");
+    } else if (e && e.tipo === "conflicto") {
+      pintarEstado("Alguien cambió los destacados mientras tanto. Recargá la página y volvé a elegir.", "ds-error");
+    } else {
+      pintarEstado("No se pudo guardar. ¿Hay internet? Probá de nuevo.", "ds-error");
+    }
+  });
+}
+$guardar.addEventListener("click", guardar);
+
+/* Aviso al cerrar con cambios sin guardar. */
+window.addEventListener("beforeunload", function (e) {
+  if (hayCambios()) { e.preventDefault(); e.returnValue = ""; }
+});
+</script>
+</body>
+</html>
