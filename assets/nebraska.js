@@ -21,6 +21,36 @@
     return promesa;
   }
 
+  /* ---------------------------- destacados ---------------------------
+     Lista de códigos que el jefe elige desde destacados.html. Vive en
+     un archivo aparte (fichas/destacados.json) para que un error ahí
+     nunca tire abajo el catálogo. Se leen en el orden en que él los
+     dejó; los códigos que ya no están en el catálogo se ignoran.
+     ------------------------------------------------------------------- */
+  var DESTACADOS = "destacados";
+  var ARCHIVO_DESTACADOS = BASE + "/destacados.json";
+  var promesaDestacados = null;
+
+  function destacados(data) {
+    if (!promesaDestacados) {
+      promesaDestacados = fetch(ARCHIVO_DESTACADOS + "?t=" + Date.now())
+        .then(function (r) { return r.ok ? r.json() : { productos: [] }; })
+        .catch(function () { return { productos: [] }; });
+    }
+    return promesaDestacados.then(function (d) {
+      var vistos = {};
+      var out = [];
+      (d.productos || []).forEach(function (codigo) {
+        if (vistos[codigo]) return;
+        var cat = catDe(data, codigo);
+        if (!cat) return;
+        vistos[codigo] = true;
+        out.push({ codigo: codigo, cat: cat });
+      });
+      return out;
+    });
+  }
+
   /* Deja el texto comparable: sin espacios, guiones ni acentos. */
   function norm(s) {
     return String(s || "")
@@ -244,6 +274,8 @@
     var a = document.createElement("a");
     a.className = "nb-prod";
     a.href = linkFicha(codigo, cat);
+    a.dataset.codigo = codigo;
+    a.dataset.cat = cat || "";
     a.innerHTML =
       '<img src="' + imgFicha(codigo, cat) + '" loading="lazy" alt="Ficha ' + escapar(codigo) + '">' +
       '<span class="cod">' + escapar(codigo) + "</span>";
@@ -261,7 +293,10 @@
 
   global.NB = {
     BASE: BASE,
+    DESTACADOS: DESTACADOS,
+    ARCHIVO_DESTACADOS: ARCHIVO_DESTACADOS,
     manifest: manifest,
+    destacados: destacados,
     indice: indice,
     catDe: catDe,
     linkFicha: linkFicha,

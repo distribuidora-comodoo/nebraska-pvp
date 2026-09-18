@@ -374,6 +374,80 @@ img{ max-width:100%; }
 }
 .nb-ficha-img{ width:100%; display:block; }
 
+/* ------------------------ compartir / descargar ------------------------
+   Barra que va arriba de la imagen de la ficha, para el vendedor que la
+   quiere subir a un estado o una story sin buscar nada. */
+.nb-share{
+  padding:12px 14px 14px;
+  border-bottom:1px solid var(--linea);
+  background:#fafafa;
+}
+.nb-share-botones{ display:flex; flex-wrap:wrap; gap:8px; }
+.nb-share-botones .nb-btn{ flex:1 1 150px; padding:13px 12px; font-size:14.5px; }
+.nb-share-botones .nb-btn svg{ width:18px; height:18px; }
+.nb-btn[disabled]{ opacity:.6; cursor:progress; }
+
+/* elección de formato: para story (vertical) o la ficha tal cual */
+.nb-share-formato{
+  display:flex; gap:4px; background:#ececf0; padding:4px; border-radius:10px;
+  margin-bottom:10px;
+}
+.nb-share-formato button{
+  flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  background:transparent; border:0; border-radius:7px; cursor:pointer;
+  font-family:inherit; font-size:12.5px; font-weight:700; color:var(--suave);
+  padding:7px 8px; transition:background .16s ease, color .16s ease;
+}
+.nb-share-formato button svg{ width:14px; height:14px; }
+.nb-share-formato button[aria-pressed="true"]{ background:#fff; color:var(--negro); box-shadow:0 1px 2px rgba(0,0,0,.08); }
+
+.nb-share-nota{ font-size:12px; color:var(--suave); margin-top:9px; line-height:1.45; min-height:1em; }
+.nb-share-nota b{ color:var(--negro); }
+
+/* la misma barra, pero como tarjeta suelta arriba de una grilla */
+.nb-share--panel{
+  border:1px solid var(--linea); border-radius:var(--radio); box-shadow:var(--sombra);
+  background:var(--blanco); margin-bottom:16px;
+}
+
+/* barra de avance (preparando N fichas) */
+.nb-progreso{ display:none; margin-top:10px; }
+.nb-progreso.activa{ display:block; }
+.nb-progreso .barra{ height:6px; border-radius:99px; background:#ececf0; overflow:hidden; }
+.nb-progreso .barra i{ display:block; height:100%; width:0; background:var(--naranja); transition:width .15s linear; }
+
+/* ------------------------- modo selección -------------------------
+   Para elegir varias fichas y compartirlas de una. Las tarjetas dejan
+   de ser links y pasan a marcarse; las no elegidas quedan en gris. */
+.nb-grid.seleccion .nb-prod{ position:relative; cursor:pointer; }
+.nb-grid.seleccion .nb-prod:not(.sel){ opacity:.55; filter:grayscale(.6); }
+.nb-grid.seleccion .nb-prod::after{
+  content:""; position:absolute; top:8px; right:8px; width:26px; height:26px;
+  border-radius:50%; border:2px solid #fff; background:rgba(255,255,255,.85);
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.nb-grid.seleccion .nb-prod.sel{ border-color:var(--naranja); box-shadow:0 0 0 2px var(--naranja); }
+.nb-grid.seleccion .nb-prod.sel::after{
+  background:var(--naranja) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E") center/16px no-repeat;
+}
+
+/* barra flotante abajo mientras se está eligiendo */
+.nb-selbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:60;
+  background:var(--negro); color:#fff;
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  box-shadow:0 -6px 24px rgba(0,0,0,.25);
+  transform:translateY(110%); transition:transform .2s ease;
+}
+.nb-selbar.activa{ transform:none; }
+.nb-selbar-in{ max-width:940px; margin:0 auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.nb-selbar .cuenta{ font-weight:800; font-size:15px; flex:1 1 auto; }
+.nb-selbar .cuenta small{ display:block; font-weight:500; font-size:12px; color:#bdbdbd; }
+.nb-selbar .nb-btn--claro{ background:transparent; color:#fff; border-color:#4a4a4a; }
+.nb-selbar .nb-btn--claro:hover{ border-color:var(--naranja); color:#fff; background:transparent; }
+body.seleccionando{ padding-bottom:90px; }
+@media (prefers-reduced-motion: reduce){ .nb-selbar{ transition:none; } }
+
 .nb-video{ padding:14px; border-top:1px solid var(--linea); }
 .nb-video h3{ font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--suave); margin-bottom:9px; }
 .nb-video iframe{
@@ -387,6 +461,34 @@ img{ max-width:100%; }
 }
 
 /* --------------------------- relacionados ---------------------------- */
+/* ----------------------------- destacados -----------------------------
+   Primera sección del menú, en negro de marca para que se distinga de
+   las categorías. Las fichas van en un carrusel sobre ese fondo. */
+.nb-destacados{
+  background:var(--negro);
+  border-radius:var(--radio);
+  padding:16px 14px 14px;
+  margin:14px 0 22px;
+  color:#fff;
+  box-shadow:0 10px 30px rgba(0,0,0,.18);
+  position:relative;
+  overflow:hidden;
+}
+.nb-destacados::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--naranja);
+}
+.nb-destacados .nb-sec-head{ margin-bottom:12px; }
+.nb-destacados .nb-sec-head h2{
+  display:flex; align-items:center; gap:8px; font-size:17px; color:#fff;
+}
+.nb-destacados .nb-sec-head h2 svg{ width:19px; height:19px; color:var(--naranja); flex:0 0 auto; }
+.nb-destacados .nb-sec-head small{ font-size:12.5px; font-weight:500; color:#bdbdbd; margin-left:2px; }
+.nb-destacados .nb-sec-head a{ color:var(--naranja); }
+.nb-destacados .nb-carrusel{ margin:0 -14px; padding:2px 14px 6px; }
+.nb-destacados .nb-carrusel::-webkit-scrollbar-thumb{ background:#4a4a4a; }
+.nb-destacados .nb-prod{ border-color:#333; box-shadow:none; }
+.nb-destacados .nb-prod:hover{ border-color:var(--naranja); }
+
 .nb-sec{ margin-top:26px; }
 .nb-sec--primera{ margin-top:0; margin-bottom:24px; }
 .nb-cierre{ margin-top:22px; }

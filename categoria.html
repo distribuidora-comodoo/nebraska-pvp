@@ -44,6 +44,27 @@
   <h1 class="nb-titulo" id="titulo">Cargando…</h1>
   <p class="nb-sub" id="subtitulo">&nbsp;</p>
 
+  <!-- Compartir varias / descargar todas: para el vendedor que sube
+       estados y stories. Se muestra cuando la categoría cargó. -->
+  <div class="nb-share nb-share--panel" id="panel" hidden>
+    <div class="nb-share-formato" role="group" aria-label="Formato de las imágenes">
+      <button type="button" data-f="story"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/></svg>Para story</button>
+      <button type="button" data-f="original"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Ficha original</button>
+    </div>
+    <div class="nb-share-botones">
+      <button class="nb-btn" type="button" id="btn-seleccionar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+        Elegir y compartir
+      </button>
+      <button class="nb-btn nb-btn--claro" type="button" id="btn-todo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 11l6 6 6-6M4 20h16"/></svg>
+        <span id="btn-todo-texto">Descargar todo</span>
+      </button>
+    </div>
+    <p class="nb-share-nota" id="nota"></p>
+    <div class="nb-progreso" id="progreso"><div class="barra"><i id="barra"></i></div></div>
+  </div>
+
   <div class="nb-grid" id="grid">
     <div class="nb-skel nb-skel-prod"></div>
     <div class="nb-skel nb-skel-prod"></div>
@@ -54,14 +75,32 @@
   <p class="nb-pie">NEBRASKA · Precios sugeridos de venta</p>
 </main>
 
+<!-- Barra que aparece abajo mientras se eligen fichas para compartir -->
+<div class="nb-selbar" id="selbar">
+  <div class="nb-selbar-in">
+    <div class="cuenta"><span id="sel-cuenta">0 elegidas</span><small id="sel-nota">Tocá las fichas que querés compartir</small></div>
+    <button class="nb-btn nb-btn--claro" type="button" id="sel-todas">Todas</button>
+    <button class="nb-btn nb-btn--claro" type="button" id="sel-cancelar">Cancelar</button>
+    <button class="nb-btn" type="button" id="sel-compartir" disabled>Compartir</button>
+  </div>
+</div>
+
 <script src="assets/nebraska.js"></script>
+<script src="assets/compartir.js"></script>
 <script>
 var cat = new URLSearchParams(location.search).get("cat");
 var grid = document.getElementById("grid");
 
-NB.manifest().then(function (data) {
-  var info = data.categorias[cat];
+/* Lista de {codigo, cat, url} de lo que se muestra. "cat" es la carpeta
+   real del producto: en Destacados cada uno viene de una distinta. */
+var productos = [];
 
+NB.manifest().then(function (data) {
+  if (cat === NB.DESTACADOS) return NB.destacados(data).then(function (lista) { return { nombre: "Destacados", lista: lista, virtual: true }; });
+  var info = data.categorias[cat];
+  if (!info) return null;
+  return { nombre: info.nombre, lista: info.productos.map(function (c) { return { codigo: c, cat: cat }; }) };
+}).then(function (info) {
   if (!info) {
     document.getElementById("titulo").textContent = "Categoría no encontrada";
     document.getElementById("subtitulo").textContent = "";
@@ -71,22 +110,187 @@ NB.manifest().then(function (data) {
     return;
   }
 
-  NB.registrarVisita(cat, null);
+  if (!info.virtual) NB.registrarVisita(cat, null);
 
   document.title = info.nombre + " — Nebraska";
   document.getElementById("titulo").textContent = info.nombre;
-  var cant = info.productos.length;
+  var cant = info.lista.length;
   document.getElementById("subtitulo").textContent = cant + (cant === 1 ? " producto" : " productos");
 
   grid.innerHTML = "";
-  info.productos.forEach(function (codigo) {
-    grid.appendChild(NB.tarjeta(codigo, cat));
+  if (!cant) {
+    grid.innerHTML = '<div class="nb-estado"><strong>Todavía no hay destacados</strong>Volvé a mirar en unos días.</div>';
+    return;
+  }
+  info.lista.forEach(function (p) {
+    grid.appendChild(NB.tarjeta(p.codigo, p.cat));
+    productos.push({ codigo: p.codigo, cat: p.cat, url: NB.imgFicha(p.codigo, p.cat) });
   });
+
+  iniciarCompartir(info.nombre);
 }).catch(function () {
   grid.innerHTML =
     '<div class="nb-estado"><strong>No se pudo cargar la categoría</strong>Revisá tu conexión e intentá de nuevo.' +
     '<br><a class="nb-btn" href="menu.html">Ver catálogo</a></div>';
 });
+
+/* =====================================================================
+   Compartir varias / descargar todas.
+
+   "Elegir y compartir" pone la grilla en modo selección: las tarjetas
+   dejan de abrir la ficha y pasan a marcarse. Abajo aparece una barra
+   con el conteo y el botón Compartir, que abre el menú del celular con
+   todas las elegidas adjuntas.
+
+   "Descargar todo" baja la categoría completa: en Android, una por una
+   a la galería (Chrome pregunta una vez si permite varias descargas);
+   en iPhone abre el menú para tocar "Guardar imágenes".
+   ===================================================================== */
+function iniciarCompartir(nombreCategoria) {
+  var C = NBCompartir;
+  var panel = document.getElementById("panel");
+  var nota = document.getElementById("nota");
+  var progreso = document.getElementById("progreso");
+  var barra = document.getElementById("barra");
+  var selbar = document.getElementById("selbar");
+  var btnSeleccionar = document.getElementById("btn-seleccionar");
+  var btnTodo = document.getElementById("btn-todo");
+  var selCompartir = document.getElementById("sel-compartir");
+  var selCuenta = document.getElementById("sel-cuenta");
+  var selNota = document.getElementById("sel-nota");
+
+  /* Instagram acepta hasta 10 stories de una tanda. Se avisa, no se frena. */
+  var MAX_SUGERIDO = 10;
+
+  panel.hidden = false;
+  if (C.esIOS) document.getElementById("btn-todo-texto").textContent = "Todas: compartir o guardar";
+
+  /* --- formato --- */
+  var botonesFormato = panel.querySelectorAll(".nb-share-formato button");
+  function pintarFormato() {
+    var f = C.formato();
+    botonesFormato.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.f === f)); });
+    nota.innerHTML = f === "story"
+      ? "Listas para subir como <b>estado</b> o <b>story</b>: no se corta el precio."
+      : "Las fichas tal cual, para mandar por chat.";
+  }
+  pintarFormato();
+  botonesFormato.forEach(function (b) {
+    b.addEventListener("click", function () { C.guardarFormato(b.dataset.f); pintarFormato(); });
+  });
+
+  /* --- avance --- */
+  function mostrarAvance(hechos, total) {
+    progreso.classList.add("activa");
+    barra.style.width = (hechos / total * 100) + "%";
+    nota.textContent = "Preparando " + hechos + " de " + total + "…";
+  }
+  function ocultarAvance() { progreso.classList.remove("activa"); barra.style.width = "0"; }
+
+  function ocupado(si) {
+    [btnSeleccionar, btnTodo, selCompartir].forEach(function (b) { b.disabled = si; });
+  }
+
+  /* Prepara y entrega (comparte o guarda) una lista de productos. */
+  function entregar(lista, accion) {
+    ocupado(true);
+    mostrarAvance(0, lista.length);
+    return C.prepararVarios(lista, C.formato(), mostrarAvance)
+      .then(function (archivos) {
+        ocultarAvance();
+        if (!archivos.length) { nota.textContent = "No se pudo preparar ninguna ficha."; return "nada"; }
+        nota.textContent = "";
+        return accion(archivos, nombreCategoria);
+      })
+      .then(function (r) {
+        if (r === "descargado") {
+          nota.innerHTML = C.esIOS
+            ? "Si no apareció el menú, tocá cada ficha y guardala desde ahí."
+            : "Guardadas en <b>Descargas</b>. Ya las podés subir desde la galería.";
+        } else if (r === "compartido" || r === "cancelado") {
+          pintarFormato();
+        }
+        return r;
+      })
+      .catch(function () { ocultarAvance(); nota.textContent = "No se pudo compartir. Probá de nuevo."; return "error"; })
+      .then(function (r) { ocupado(false); return r; });
+  }
+
+  /* Sólo las que tienen ficha cargada: si la imagen no existe, la
+     tarjeta ya la reemplazó por el cartel "en preparación". */
+  function conFicha(lista) {
+    return lista.filter(function (p) {
+      var t = grid.querySelector('.nb-prod[data-codigo="' + p.codigo + '"]');
+      return t && t.querySelector("img");
+    });
+  }
+
+  /* --- descargar todo --- */
+  btnTodo.addEventListener("click", function () {
+    var lista = conFicha(productos);
+    if (!lista.length) return;
+    entregar(lista, C.guardar);
+  });
+
+  /* --- modo selección --- */
+  var seleccion = {};
+
+  function pintarSeleccion() {
+    var n = Object.keys(seleccion).length;
+    selCuenta.textContent = n + (n === 1 ? " elegida" : " elegidas");
+    selCompartir.disabled = n === 0;
+    selNota.textContent = n > MAX_SUGERIDO
+      ? "Instagram acepta hasta " + MAX_SUGERIDO + " por vez; WhatsApp más."
+      : "Tocá las fichas que querés compartir";
+  }
+
+  function entrarSeleccion() {
+    grid.classList.add("seleccion");
+    selbar.classList.add("activa");
+    document.body.classList.add("seleccionando");
+    pintarSeleccion();
+  }
+  function salirSeleccion() {
+    grid.classList.remove("seleccion");
+    selbar.classList.remove("activa");
+    document.body.classList.remove("seleccionando");
+    grid.querySelectorAll(".nb-prod.sel").forEach(function (t) { t.classList.remove("sel"); });
+    seleccion = {};
+  }
+
+  btnSeleccionar.addEventListener("click", entrarSeleccion);
+  document.getElementById("sel-cancelar").addEventListener("click", salirSeleccion);
+
+  document.getElementById("sel-todas").addEventListener("click", function () {
+    conFicha(productos).forEach(function (p) {
+      seleccion[p.codigo] = true;
+      var t = grid.querySelector('.nb-prod[data-codigo="' + p.codigo + '"]');
+      if (t) t.classList.add("sel");
+    });
+    pintarSeleccion();
+  });
+
+  /* En modo selección, tocar una tarjeta la marca en vez de abrirla. */
+  grid.addEventListener("click", function (e) {
+    if (!grid.classList.contains("seleccion")) return;
+    var t = e.target.closest(".nb-prod");
+    if (!t) return;
+    e.preventDefault();
+    if (!t.querySelector("img")) return; /* sin ficha: no hay qué compartir */
+    var codigo = t.dataset.codigo;
+    if (seleccion[codigo]) { delete seleccion[codigo]; t.classList.remove("sel"); }
+    else { seleccion[codigo] = true; t.classList.add("sel"); }
+    pintarSeleccion();
+  });
+
+  selCompartir.addEventListener("click", function () {
+    var lista = productos.filter(function (p) { return seleccion[p.codigo]; });
+    if (!lista.length) return;
+    entregar(lista, C.compartir).then(function (r) {
+      if (r === "compartido" || r === "descargado") salirSeleccion();
+    });
+  });
+}
 </script>
 </body>
 </html>
