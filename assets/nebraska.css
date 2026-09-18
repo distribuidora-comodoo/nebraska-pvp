@@ -374,6 +374,36 @@ img{ max-width:100%; }
 }
 .nb-ficha-img{ width:100%; display:block; }
 
+/* ------------------------ compartir / descargar ------------------------
+   Barra que va arriba de la imagen de la ficha, para el vendedor que la
+   quiere subir a un estado o una story sin buscar nada. */
+.nb-share{
+  padding:12px 14px 14px;
+  border-bottom:1px solid var(--linea);
+  background:#fafafa;
+}
+.nb-share-botones{ display:flex; gap:8px; }
+.nb-share-botones .nb-btn{ flex:1 1 0; padding:13px 12px; font-size:14.5px; }
+.nb-share-botones .nb-btn svg{ width:18px; height:18px; }
+.nb-btn[disabled]{ opacity:.6; cursor:progress; }
+
+/* elección de formato: para story (vertical) o la ficha tal cual */
+.nb-share-formato{
+  display:flex; gap:4px; background:#ececf0; padding:4px; border-radius:10px;
+  margin-bottom:10px;
+}
+.nb-share-formato button{
+  flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  background:transparent; border:0; border-radius:7px; cursor:pointer;
+  font-family:inherit; font-size:12.5px; font-weight:700; color:var(--suave);
+  padding:7px 8px; transition:background .16s ease, color .16s ease;
+}
+.nb-share-formato button svg{ width:14px; height:14px; }
+.nb-share-formato button[aria-pressed="true"]{ background:#fff; color:var(--negro); box-shadow:0 1px 2px rgba(0,0,0,.08); }
+
+.nb-share-nota{ font-size:12px; color:var(--suave); margin-top:9px; line-height:1.45; min-height:1em; }
+.nb-share-nota b{ color:var(--negro); }
+
 .nb-video{ padding:14px; border-top:1px solid var(--linea); }
 .nb-video h3{ font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--suave); margin-bottom:9px; }
 .nb-video iframe{

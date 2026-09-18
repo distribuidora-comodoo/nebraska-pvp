@@ -61,6 +61,7 @@
 </main>
 
 <script src="assets/nebraska.js"></script>
+<script src="assets/compartir.js"></script>
 <script>
 /* =====================================================================
    Links del QR que soporta esta página:
@@ -166,6 +167,7 @@ function mostrar(img, cat, data) {
     '<span class="cod">' + NB.escapar(id) + "</span>" +
     (info ? '<a class="nb-chip" href="categoria.html?cat=' + encodeURIComponent(cat) + '">' + NB.escapar(info.nombre) + "</a>" : "");
   card.appendChild(top);
+  card.appendChild(barraCompartir(img));
   card.appendChild(img);
 
   /* Video del producto, si está cargado en el manifest */
@@ -179,6 +181,83 @@ function mostrar(img, cat, data) {
   }
 
   if (info) relacionados(cat, info);
+}
+
+/* ---------------------------------------------------------------------
+   Compartir / Descargar, arriba de la imagen.
+
+   Compartir abre el menú del celular con la foto adjunta; ahí la persona
+   elige WhatsApp -> Mi estado, o Instagram -> Historia. Descargar la
+   guarda en la galería (en iPhone, abre el mismo menú para tocar
+   "Guardar imagen", que es lo único que manda una foto a Fotos).
+   --------------------------------------------------------------------- */
+var ICONO_COMPARTIR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>';
+var ICONO_BAJAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 11l6 6 6-6M4 20h16"/></svg>';
+var ICONO_STORY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/></svg>';
+var ICONO_FICHA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>';
+
+function barraCompartir(img) {
+  var C = NBCompartir;
+  var barra = document.createElement("div");
+  barra.className = "nb-share";
+  barra.innerHTML =
+    '<div class="nb-share-formato" role="group" aria-label="Formato de la imagen">' +
+      '<button type="button" data-f="story">' + ICONO_STORY + "Para story</button>" +
+      '<button type="button" data-f="original">' + ICONO_FICHA + "Ficha original</button>" +
+    "</div>" +
+    '<div class="nb-share-botones">' +
+      '<button class="nb-btn" type="button" data-accion="compartir">' + ICONO_COMPARTIR + "Compartir</button>" +
+      '<button class="nb-btn nb-btn--claro" type="button" data-accion="guardar">' + ICONO_BAJAR +
+        (C.esIOS ? "Guardar en Fotos" : "Descargar") + "</button>" +
+    "</div>" +
+    '<p class="nb-share-nota"></p>';
+
+  var nota = barra.querySelector(".nb-share-nota");
+  var botonesFormato = barra.querySelectorAll(".nb-share-formato button");
+  var botonesAccion = barra.querySelectorAll(".nb-share-botones button");
+
+  function pintarFormato() {
+    var f = C.formato();
+    botonesFormato.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.f === f)); });
+    nota.innerHTML = f === "story"
+      ? "Lista para subir como <b>estado</b> o <b>story</b>: no se corta el precio."
+      : "La ficha tal cual, para mandar por chat.";
+  }
+  pintarFormato();
+
+  botonesFormato.forEach(function (b) {
+    b.addEventListener("click", function () { C.guardarFormato(b.dataset.f); pintarFormato(); });
+  });
+
+  /* Se arma la versión para story apenas se ve la ficha, así el toque
+     en Compartir no tiene que esperar (importa en iPhone). */
+  var listo = C.preparar(img, id);
+  listo.catch(function () { nota.textContent = "No se pudo preparar la imagen para compartir."; });
+
+  function ocupado(si) { botonesAccion.forEach(function (b) { b.disabled = si; }); }
+
+  botonesAccion.forEach(function (b) {
+    b.addEventListener("click", function () {
+      ocupado(true);
+      listo.then(function (archivos) {
+        var archivo = archivos[C.formato()];
+        var accion = b.dataset.accion === "compartir" ? C.compartir : C.guardar;
+        return accion([archivo], id);
+      }).then(function (resultado) {
+        if (resultado === "descargado") {
+          nota.innerHTML = C.esIOS
+            ? "Si no apareció el menú, mantené apretada la imagen y elegí <b>Guardar imagen</b>."
+            : "Guardada en <b>Descargas</b>. Ya la podés subir desde la galería.";
+        } else if (resultado === "compartido") {
+          pintarFormato();
+        }
+      }).catch(function () {
+        nota.textContent = "No se pudo compartir. Probá de nuevo.";
+      }).then(function () { ocupado(false); });
+    });
+  });
+
+  return barra;
 }
 
 /* Carrusel con el resto de la familia, para seguir recorriendo el catálogo. */
