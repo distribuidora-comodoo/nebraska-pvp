@@ -23,6 +23,7 @@
      y la de abajo (responder). La ficha se mantiene fuera de esas zonas. */
   var STORY_MARGEN_VERTICAL = 260;
   var STORY_MARGEN_LADO = 64;
+  var STORY_FRANJA = 24;
 
   var LLAVE_FORMATO = "nb_formato";
 
@@ -58,10 +59,10 @@
     ctx.fillStyle = "#1d1d1d";
     ctx.fillRect(0, 0, STORY_ANCHO, STORY_ALTO);
 
-    /* La misma línea naranja que lleva el encabezado del sitio. */
+    /* Las franjas naranjas de la marca, arriba y abajo. */
     ctx.fillStyle = "#fc771d";
-    ctx.fillRect(0, 0, STORY_ANCHO, 10);
-    ctx.fillRect(0, STORY_ALTO - 10, STORY_ANCHO, 10);
+    ctx.fillRect(0, 0, STORY_ANCHO, STORY_FRANJA);
+    ctx.fillRect(0, STORY_ALTO - STORY_FRANJA, STORY_ANCHO, STORY_FRANJA);
 
     var maxW = STORY_ANCHO - STORY_MARGEN_LADO * 2;
     var maxH = STORY_ALTO - STORY_MARGEN_VERTICAL * 2;
