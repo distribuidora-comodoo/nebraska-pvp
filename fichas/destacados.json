@@ -1,10 +1,10 @@
 {
   "productos": [
-    "NEMEBO300",
-    "NEMEBO600",
-    "NEMECC520",
-    "NEMECP1200",
     "NEMECP1500",
+    "NEMECP1200",
+    "NEMECC520",
+    "NEMEBO600",
+    "NEMEBO300",
     "NEMESO2400"
   ],
   "actualizado": "2026-10-07"
